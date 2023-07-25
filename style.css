@@ -1,0 +1,63 @@
+/* -------RESETS------- */
+html {
+    color: #202020;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+    font-family: Lato, sans-serif;
+}
+
+body {
+    margin: 0;
+    overflow-x: hidden;
+    background: #575757;
+}
+
+*, *::after, *::before {
+    color: inherit;
+    box-sizing: inherit;
+    font-family: inherit;
+}
+/* -------RESETS END------- */
+
+.main {
+    text-align: center;
+    margin: 250px auto 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 20px;
+}
+
+div.select-3 {
+    /*position: relative;*/
+    cursor: pointer;
+    display: inline-block;
+    width: 180px;
+    height: 40px;
+    line-height: 40px;
+    background: purple;
+}
+
+div.select-3.opened {
+    overflow: visible;
+}
+
+.select-3 .inner {
+    display: flex;
+    flex-direction: column;
+    background: orange;
+    max-height: 0;
+    overflow: hidden;
+    /*transition: 0.3s max-height;*/
+}
+
+.select-3.opened .inner {
+
+}
+
+.select-3 > .selected-top,
+.select-3 .inner span {
+    display: block;
+    width: 100%;
+}
+
