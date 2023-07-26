@@ -11,6 +11,10 @@
 // }
 // const select = d.getElementById('select3');
 
+// document.addEventListener('click', e => {
+//     console.log(e.target);
+// })
+
 const d = document;
 
 function _(selector) {
@@ -33,29 +37,36 @@ function Select3(selector, options) {
         // TODO --> Get all selected options from OG <select>
         // TODO --> Escape the text in <option>
         // TODO --> Have "allowNoSelection" option for if you want to deselect or select nothing
-        // TODO --> Open select3 when clicking on its <label>
         // TODO --> Close select when clicking outside of it
+        // TODO --> Implement search
 
         let select3 = d.createElement('div')
         select3.classList.add('select-3')
 
-        let inner = d.createElement('div')
-        inner.classList.add('inner')
+        select3.id = el.id
+
+        let label = d.querySelector('label[for="' + el.id + '"]')
+
+        if (label !== null) {
+            label.addEventListener('click', () => {
+                openCloseSelect3(select3)
+            })
+        }
 
         if (el.multiple) {
             select3.classList.add('multiple')
         }
+
+        let inner = d.createElement('div')
+        inner.classList.add('inner')
 
         let optGroups = el.querySelectorAll('optgroup')
         let opts = el.querySelectorAll('option')
 
         // In case there are no optgroups, append all options to 'inner'
         if (!optGroups.length) {
-
             for (let opt of opts) {
-
                 let optEl = d.createElement('span')
-
                 optEl.setAttribute('data-value', opt.value.toString())
 
                 // Transfer data- attributes
@@ -77,7 +88,7 @@ function Select3(selector, options) {
                         clone.textContent = opt.text
                     }
                     clone.addEventListener('click', () => {
-                        closeSelect3(select3)
+                        openCloseSelect3(select3)
                     })
                     select3.prepend(clone)
                     optEl.setAttribute('data-selected', '1')
@@ -111,11 +122,12 @@ function Select3(selector, options) {
                 cloneEl.textContent = el.textContent
                 cloneEl.classList.add('selected-top')
 
+                cloneEl.addEventListener('click', (e) => {
+                    openCloseSelect3(select3)
+                })
+
                 if (options.closeOnSelect) {
-                    cloneEl.addEventListener('click', (e) => {
-                        closeSelect3(select3)
-                    })
-                    closeSelect3(select3)
+                    openCloseSelect3(select3)
                 }
                 select3.querySelector('.selected-top').replaceWith(cloneEl)
             })
@@ -129,7 +141,7 @@ function Select3(selector, options) {
         // insertAfter(newSelects[i], elements[i].parentNode.lastElementChild);
     }
 
-    function closeSelect3(select) {
+    function openCloseSelect3(select) {
         let dropdown = select.querySelector('.inner')
         let dropdownHeight = dropdown.scrollHeight
 

@@ -48,7 +48,7 @@ div.select-3.opened {
     background: orange;
     max-height: 0;
     overflow: hidden;
-    /*transition: 0.3s max-height;*/
+    transition: 0.3s max-height;
 }
 
 .select-3.opened .inner {
