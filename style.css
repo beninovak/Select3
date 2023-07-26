@@ -19,6 +19,12 @@ body {
 }
 /* -------RESETS END------- */
 
+label {
+    width: 100%;
+    display: block;
+    margin: 50px auto 20px auto;
+}
+
 .main {
     text-align: center;
     margin: 250px auto 0;
@@ -26,6 +32,7 @@ body {
     justify-content: center;
     align-items: center;
     column-gap: 20px;
+    flex-wrap: wrap;
 }
 
 div.select-3 {
@@ -34,8 +41,8 @@ div.select-3 {
     display: inline-block;
     width: 180px;
     height: 40px;
-    line-height: 40px;
-    background: purple;
+    line-height: 40px; /* TODO reduce this*/
+    background: #fff;
 }
 
 div.select-3.opened {
@@ -45,19 +52,32 @@ div.select-3.opened {
 .select-3 .inner {
     display: flex;
     flex-direction: column;
-    background: orange;
+    background: #fff;
     max-height: 0;
     overflow: hidden;
     transition: 0.3s max-height;
 }
 
-.select-3.opened .inner {
-
-}
-
-.select-3 > .selected-top,
-.select-3 .inner span {
-    display: block;
+.select-3 > .selected-top {
     width: 100%;
+    display: block;
+    background: #fff;
 }
 
+.select-3.opened > .inner {
+    border-top: 1px solid #000;
+}
+
+.select-3 .inner span {
+    width: 100%;
+    display: block;
+}
+
+.select-3 .inner span.selected {
+    font-weight: bold;
+}
+
+.select-3 .inner span.title {
+    font-size: 90%;
+    font-weight: bold;
+}

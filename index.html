@@ -8,29 +8,27 @@
 <body>
 
 <div class="main">
+    <label for="select3">Custom select 1</label>
+    <select id="select3" class="select3 groups" name="">
+        <optgroup label="optgroup 1">
+            <option value="one">Option 1</option>
+            <option value="two">Option 2</option>
+        </optgroup>
+        <optgroup label="optgroup 2">
+            <option value="three">Option 3</option>
+            <option value="four">Option 4</option>
+            <option value="five">Option 5</option>
+        </optgroup>
+    </select>
 
-<!--    <label for="select3"></label>-->
-<!--    <select id="select3" class="" name="">-->
-<!--        <optgroup label="optgroup 1">-->
-<!--            <option value="one">Option 1</option>-->
-<!--            <option value="two">Option 2</option>-->
-<!--        </optgroup>-->
-<!--        <optgroup label="optgroup 2">-->
-<!--            <option value="three">Option 3</option>-->
-<!--            <option value="four">Option 4</option>-->
-<!--            <option value="five">Option 5</option>-->
-<!--        </optgroup>-->
-<!--    </select>-->
-
-    <label for="basic-select">Custom select</label>
-    <select id="basic-select" class="select3" name=""> <!-- try multiple -->
+    <label for="basic-select">Custom select 2</label>
+    <select id="basic-select" class="select3 no-close" name=""> <!-- try multiple -->
         <option value="one" disabled="disabled">Option 1</option>
         <option value="two" selected="selected">Option 2</option>
         <option data-num="44" data-krneki="tvojamt" value="three">Option 3</option>
         <option value="four" label="4 - four - 4">Option 4</option>
         <option data-num="61" value="five">Option 5</option>
     </select>
-
 </div>
 
 <script src="script.js"></script>
