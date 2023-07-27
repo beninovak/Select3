@@ -39,6 +39,8 @@ function Select3(selector, options) {
         // TODO --> Have "allowNoSelection" option for if you want to deselect or select nothing
         // TODO --> Close select when clicking outside of it
         // TODO --> Implement search
+        // TODO --> Consider implementing ajax or something
+        // TODO --> Get all values of a multiple select when sending ajax
         // TODO --> Check all other TODOs
 
         let select3 = d.createElement('div')
@@ -66,19 +68,21 @@ function Select3(selector, options) {
 
         // In case there are no optgroups, append all options to 'inner'
         if (!optGroups.length) {
-            appendOptions(select3, inner, opts)
+            appendOptions(el, select3, inner, opts, el.multiple)
         } else {
-            optGroups.forEach(el => {
+            optGroups.forEach(group => {
                 let optGroupEl = d.createElement('div')
                 optGroupEl.classList.add('optgroup')
 
                 let optGroupTitle = d.createElement('span')
                 optGroupTitle.classList.add('title')
-                optGroupTitle.textContent = el.label
+                optGroupTitle.textContent = group.label
 
                 optGroupEl.append(optGroupTitle)
 
-                appendOptions(select3, optGroupEl, el.children, true)
+                let groupOptions = group.querySelectorAll('option')
+
+                appendOptions(el, select3, optGroupEl, groupOptions,  el.multiple)
 
                 inner.append(optGroupEl)
             })
@@ -107,7 +111,8 @@ function Select3(selector, options) {
         }
     }
 
-    function appendOptions(select, parent, opts) {
+    function appendOptions(originalSelect, select, parent, opts, isMultipleSelect) {
+
         for (let opt of opts) {
             let optEl = d.createElement('span')
             optEl.setAttribute('data-value', opt.value.toString())
@@ -122,6 +127,8 @@ function Select3(selector, options) {
 
             // Copy selected node for use at the top of select3
             if (opt.selected) {
+                optEl.classList.add('selected')
+
                 let clone = optEl.cloneNode()
                 clone.classList.add('selected-top')
 
@@ -151,14 +158,36 @@ function Select3(selector, options) {
 
             // Add event listeners to all options
             optEl.addEventListener('click', (e) => {
+
+                originalSelect.value = optEl.getAttribute('data-value')
+
+                // Set behaviour depending on if the select is multiple choice or not
+                if (!isMultipleSelect) {
+                    select.querySelectorAll('.inner span').forEach(child => {
+                        child.classList.remove('selected')
+                        child.setAttribute('data-selected', '0')
+                    })
+                    optEl.classList.add('selected')
+                    optEl.setAttribute('data-selected', '1')
+                } else {
+                    if (optEl.getAttribute('data-selected') === '1') {
+                        optEl.setAttribute('data-selected', '0')
+                    } else if (optEl.getAttribute('data-selected') === '0') {
+                        optEl.setAttribute('data-selected', '1')
+                    }
+                }
+
+                let form = d.querySelector('form#form')
+                let formData = new FormData(form)
+                console.log(formData)
+
+                // var http = new XMLHttpRequest()
+                // http.open("POST", "tests.localhost/Select3", true)
+                // http.setRequestHeader("Content-type","multipart/form-data")
+                // http.send(formData)
+
                 let el = e.target
                 let cloneEl = el.cloneNode()
-
-                select.querySelectorAll('span').forEach(child => {
-                    child.classList.remove('selected')
-                })
-
-                el.classList.add('selected')
 
                 cloneEl.textContent = el.textContent
                 cloneEl.classList.add('selected-top')
@@ -175,7 +204,6 @@ function Select3(selector, options) {
 
             parent.append(optEl)
         }
-
     }
 
     function applyOptions() {
