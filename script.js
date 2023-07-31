@@ -35,12 +35,13 @@ function Select3(selector, options) {
         if (el.tagName !== 'SELECT') continue
 
         // TODO --> Get all selected options from OG <select>
+        // TODO --> Hide OG select
         // TODO --> Escape the text in <option>
-        // TODO --> Have "allowNoSelection" option for if you want to deselect or select nothing
         // TODO --> Close select when clicking outside of it
         // TODO --> Implement search
         // TODO --> Consider implementing ajax or something
         // TODO --> Get all values of a multiple select when sending ajax
+        // TODO --> 'submitFormOnSelect' option that takes an id selector. Submit with on 'change' event
         // TODO --> Check all other TODOs
 
         let select3 = d.createElement('div')
@@ -70,6 +71,11 @@ function Select3(selector, options) {
         if (!optGroups.length) {
             appendOptions(el, select3, inner, opts, el.multiple)
         } else {
+            if (el[0].tagName === 'OPTION') {
+                let nodeList = el.querySelectorAll(':scope > option')
+                appendOptions(el, select3, inner, nodeList, false)
+            }
+
             optGroups.forEach(group => {
                 let optGroupEl = d.createElement('div')
                 optGroupEl.classList.add('optgroup')
@@ -112,6 +118,15 @@ function Select3(selector, options) {
     }
 
     function appendOptions(originalSelect, select, parent, opts, isMultipleSelect) {
+
+        let noOptionSelected = true
+
+        for (let opt of opts) {
+            if (opt.selected) {
+                noOptionSelected = false
+                break
+            }
+        }
 
         for (let opt of opts) {
             let optEl = d.createElement('span')
@@ -209,6 +224,7 @@ function Select3(selector, options) {
     function applyOptions() {
         const opts = {
             closeOnSelect: true,
+            allowNoSelection: false,
         }
 
         for (let property in options) {
@@ -251,7 +267,7 @@ function Select3(selector, options) {
 
 // Program start
 Select3('.select3.groups',{
-    closeOnSelect: false,
+    closeOnSelect: true,
 })
 
 Select3('.select3.no-close',{
