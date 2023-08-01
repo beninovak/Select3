@@ -1,61 +1,27 @@
-// Select3.prototype.select3 = function(options) {
-//
-//     const _ = this;
-//     const configs = options;
-//
-//     const optGroups = _.querySelectorAll('optgroup');
-//     const opts = _.querySelectorAll('option');
-//
-//     console.log(optGroups);
-//     console.log(opts);
-// }
-// const select = d.getElementById('select3');
-
-// document.addEventListener('click', e => {
-//     console.log(e.target);
-// })
-
-const d = document;
-
-function _(selector) {
-    return d.querySelectorAll(selector)
-}
+const d = document
 
 function Select3(selector, options) {
 
     // If any options were set, apply them
     options = applyOptions()
 
-    const elements = _(selector)
-
-    const newSelects = []
+    const elements = d.querySelectorAll(selector)
 
     for (let el of elements) {
 
         if (el.tagName !== 'SELECT') continue
 
         // TODO --> Get all selected options from OG <select>
-        // TODO --> Hide OG select
         // TODO --> Escape the text in <option>
-        // TODO --> Close select when clicking outside of it
         // TODO --> Implement search
-        // TODO --> Consider implementing ajax or something
-        // TODO --> Get all values of a multiple select when sending ajax
+        // TODO --> Close select when clicking outside of it
         // TODO --> 'submitFormOnSelect' option that takes an id selector. Submit with on 'change' event
         // TODO --> Check all other TODOs
 
         let select3 = d.createElement('div')
-        select3.classList.add('select-3')
+        select3.classList.add('select3')
 
         select3.id = el.id
-
-        let label = d.querySelector('label[for="' + el.id + '"]')
-
-        if (label !== null) {
-            label.addEventListener('click', () => {
-                openCloseSelect3(select3)
-            })
-        }
 
         if (el.multiple) {
             select3.classList.add('multiple')
@@ -63,6 +29,15 @@ function Select3(selector, options) {
 
         let inner = d.createElement('div')
         inner.classList.add('inner')
+
+        let label = d.querySelector('label[for="' + el.id + '"]')
+
+        if (label !== null) {
+            label.classList.add('for-select3')
+            label.addEventListener('click', () => {
+                openCloseSelect3(select3)
+            })
+        }
 
         let optGroups = el.querySelectorAll('optgroup')
         let opts = el.querySelectorAll('option')
@@ -96,12 +71,8 @@ function Select3(selector, options) {
 
         select3.append(inner)
 
-        newSelects.push(select3)
-    }
-
-    for (let i = 0; i < newSelects.length; i++) {
-        elements[i].parentNode.append(newSelects[i]) // TODO --> Fix this to insert after OG select
-        // insertAfter(newSelects[i], elements[i].parentNode.lastElementChild);
+        el.style.display = 'none'
+        el.parentNode.insertBefore(select3, el.nextSibling)
     }
 
     function openCloseSelect3(select) {
@@ -111,6 +82,7 @@ function Select3(selector, options) {
         select.classList.toggle('opened')
 
         if (select.classList.contains('opened')) {
+            console.log('OPENING')
             dropdown.style.maxHeight = dropdownHeight + 'px'
         } else {
             dropdown.style.maxHeight =  '0px'
@@ -134,7 +106,7 @@ function Select3(selector, options) {
 
             // Transfer data- attributes
             if (Object.keys(opt.dataset).length) {
-                let optDataSet = opt.dataset;
+                let optDataSet = opt.dataset
                 for (const property in optDataSet) {
                     optEl.setAttribute('data-' + property, optDataSet[property])
                 }
@@ -192,15 +164,6 @@ function Select3(selector, options) {
                     }
                 }
 
-                let form = d.querySelector('form#form')
-                let formData = new FormData(form)
-                console.log(formData)
-
-                // var http = new XMLHttpRequest()
-                // http.open("POST", "tests.localhost/Select3", true)
-                // http.setRequestHeader("Content-type","multipart/form-data")
-                // http.send(formData)
-
                 let el = e.target
                 let cloneEl = el.cloneNode()
 
@@ -238,10 +201,10 @@ function Select3(selector, options) {
             }
         }
 
-        // const resolvedOptions = resolveConflicts(options, opts);
+        // const resolvedOptions = resolveConflicts(options, opts)
         // Adopt resolved options
         // for (let property in resolvedOptions) {
-        //     opts[property] = resolvedOptions[property];
+        //     opts[property] = resolvedOptions[property]
         // }
 
         return opts
@@ -249,19 +212,19 @@ function Select3(selector, options) {
 
     function isValid(property, value) {
 
-        let isValid = false;
+        let isValid = false
 
         switch (property) {
 
             case 'closeOnSelect':
-                typeof value === 'boolean' ? isValid = true : isValid = false;
-                break;
+                typeof value === 'boolean' ? isValid = true : isValid = false
+                break
 
             default:
-                break;
+                break
         }
 
-        return isValid;
+        return isValid
     }
 }
 
@@ -273,3 +236,21 @@ Select3('.select3.groups',{
 Select3('.select3.no-close',{
     closeOnSelect: false,
 })
+
+// Check if user clicks outside select. If so, close select3s.
+// d.addEventListener('click', (e) => {
+//     let el = e.target
+//
+//     if (el.tagName === 'LABEL' && el.classList.contains('for-select3')) {
+//         e.preventDefault()
+//     }
+//
+//     if (!(el.tagName === 'LABEL' && el.classList.contains('for-select3')) || el.closest('div.select3') === null) {
+//         console.log('DOCUMENT')
+//         d.querySelectorAll('div.select3').forEach(el => {
+//             let dropdown = el.querySelector('.inner')
+//             el.classList.remove('opened')
+//             dropdown.style.maxHeight =  '0px'
+//         })
+//     }
+// })

@@ -35,7 +35,7 @@ label {
     flex-wrap: wrap;
 }
 
-div.select-3 {
+div.select3 {
     position: relative;
     cursor: pointer;
     display: inline-block;
@@ -45,12 +45,13 @@ div.select-3 {
     background: #fff;
 }
 
-div.select-3.opened {
+div.select3.opened {
     overflow: visible;
 }
 
-.select-3 .inner {
+.select3 .inner {
     position: absolute;
+    z-index: 100;
     top: 100%;
     left: 0;
     right: 0;
@@ -60,28 +61,32 @@ div.select-3.opened {
     transition: 0.3s max-height;
 }
 
-.select-3 > .selected-top {
+.select3 > .selected-top {
     width: 100%;
     height: 100%;
     display: block;
     background: #fff;
 }
 
-.select-3.opened > .inner {
+.select3.opened > .inner {
     border-top: 1px solid #000;
 }
 
-.select-3 .inner span {
+.select3 .inner span {
     width: 100%;
     display: block;
+    text-align: left;
+    padding-left: 30px;
 }
 
-.select-3 .inner span.selected {
+.select3 .inner span.selected {
     font-weight: bold;
     background: #e0e0e0;
 }
 
-.select-3 .inner span.title {
-    font-size: 110%;
+.select3 .inner span.title {
+    font-size: 90%;
     font-weight: bold;
+    font-style: italic;
+    padding-left: 10px;
 }

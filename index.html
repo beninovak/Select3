@@ -8,27 +8,29 @@
 <body>
 
 <div class="main">
-    <form action="" method="post" id="form">
+    <form action="" method="post" id="test-form-1">
         <input type="hidden" name="hp" value="test_123"/>
         <input type="hidden" name="test" value="some value"/>
 
-<!--        <label for="select3">Custom select 1</label>-->
-<!--        <select id="select3" class="select3 groups" name="w-optgroups">-->
-<!--            <option value="" selected="selected"></option>-->
-<!--            <optgroup label="optgroup 1">-->
-<!--                <option value="one">Option 1</option>-->
-<!--                <option value="two">Option 2</option>-->
-<!--            </optgroup>-->
-<!--            <optgroup label="optgroup 2">-->
-<!--                <option value="three">Option 3</option>-->
-<!--                <option value="four">Option 4</option>-->
-<!--                <option value="five">Option 5</option>-->
-<!--            </optgroup>-->
-<!--        </select>-->
+        <label for="select3">Custom select 1</label>
+        <select id="select3" class="select3 groups" name="w-optgroups">
+            <!--<option value="" selected="selected"></option>-->
+            <optgroup label="optgroup 1">
+                <option value="one">Option 1</option>
+                <option value="two">Option 2</option>
+            </optgroup>
+            <optgroup label="optgroup 2">
+                <option value="three">Option 3</option>
+                <option value="four">Option 4</option>
+                <option value="five">Option 5</option>
+            </optgroup>
+        </select>
+    </form>
 
+    <form id="test-form2">
         <label for="basic-select">Custom select 2</label>
         <select id="basic-select" class="select3 no-close" name="no-optgroups"> <!-- try multiple -->
-            <option value=""></option>
+            <!--<option value=""></option>-->
             <option value="one" disabled="disabled">Option 1</option>
             <option value="two">Option 2</option>
             <option value="three">Option 3</option>
