@@ -39,7 +39,7 @@ div.select3 {
     position: relative;
     cursor: pointer;
     display: inline-block;
-    width: 180px;
+    min-width: 180px;
     height: 40px;
     line-height: 40px; /* TODO reduce this*/
     background: #fff;
@@ -75,8 +75,8 @@ div.select3.opened {
 .select3 .inner span {
     width: 100%;
     display: block;
-    text-align: left;
-    padding-left: 30px;
+    text-align: start;
+    padding-inline-start: 30px;
 }
 
 .select3 .inner span.selected {
@@ -88,5 +88,56 @@ div.select3.opened {
     font-size: 90%;
     font-weight: bold;
     font-style: italic;
-    padding-left: 10px;
+    padding-inline-start: 10px;
 }
+
+/* Multiple select */
+.select3.multiple {
+    display: flex;
+    flex-wrap: wrap;
+    /*column-gap: 10px;*/
+}
+
+.select3.multiple > .selected-top {
+    display: inline-block;
+    width: fit-content;
+    height: 70%;
+    align-self: center;
+    line-height: 28px;
+    padding-inline: 5px;
+    margin-inline: 5px;
+    background: #c6c6c6;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.select3.multiple .inner {
+    width: 100%;
+}
+
+.select3.multiple .inner span {
+    position: relative;
+    padding-inline-start: 45px;
+}
+
+.select3.multiple .inner span::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    inset-inline-start: 15px;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #000;
+    border-radius: 4px;
+}
+
+.select3.multiple .inner span[data-selected="1"]::after {
+    content: url("checkmark.svg");
+    position: absolute;
+    top: 14px;
+    inset-inline-start: 17px;
+    width: 12px;
+    height: 12px;
+    line-height: 12px;
+}
+/* Multiple select end */

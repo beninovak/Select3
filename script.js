@@ -2,6 +2,29 @@ const d = document
 
 function Select3(selector, options) {
 
+    /* Handle closing of select when clicking outside it */
+    d.addEventListener('click', (e) => {
+        let el = e.target
+        let clickedSelect = el.closest('.select3')
+
+        // If no parent has class "select3"
+        if (clickedSelect === null) {
+            d.querySelectorAll('div.select3').forEach(node => {
+                let dropdown = node.querySelector('.inner')
+                node.classList.remove('opened')
+                dropdown.style.maxHeight =  '0px'
+            })
+        } else {
+            d.querySelectorAll('div.select3').forEach(node => {
+                if (!node.isEqualNode(clickedSelect)) {
+                    let dropdown = node.querySelector('.inner')
+                    node.classList.remove('opened')
+                    dropdown.style.maxHeight =  '0px'
+                }
+            })
+        }
+    })
+
     // If any options were set, apply them
     options = applyOptions()
 
@@ -11,10 +34,10 @@ function Select3(selector, options) {
 
         if (el.tagName !== 'SELECT') continue
 
+        // TODO --> In case no option is selected on select3 init, create empty one and give it the openClose event listener
         // TODO --> Get all selected options from OG <select>
         // TODO --> Escape the text in <option>
         // TODO --> Implement search
-        // TODO --> Close select when clicking outside of it
         // TODO --> 'submitFormOnSelect' option that takes an id selector. Submit with on 'change' event
         // TODO --> Check all other TODOs
 
@@ -82,7 +105,6 @@ function Select3(selector, options) {
         select.classList.toggle('opened')
 
         if (select.classList.contains('opened')) {
-            console.log('OPENING')
             dropdown.style.maxHeight = dropdownHeight + 'px'
         } else {
             dropdown.style.maxHeight =  '0px'
@@ -91,14 +113,14 @@ function Select3(selector, options) {
 
     function appendOptions(originalSelect, select, parent, opts, isMultipleSelect) {
 
-        let noOptionSelected = true
-
-        for (let opt of opts) {
-            if (opt.selected) {
-                noOptionSelected = false
-                break
-            }
-        }
+        // let noOptionSelected = true
+        //
+        // for (let opt of opts) {
+        //     if (opt.selected) {
+        //         noOptionSelected = false
+        //         break
+        //     }
+        // }
 
         for (let opt of opts) {
             let optEl = d.createElement('span')
@@ -185,6 +207,7 @@ function Select3(selector, options) {
     }
 
     function applyOptions() {
+        /* All possible options and their default values */
         const opts = {
             closeOnSelect: true,
             allowNoSelection: false,
@@ -253,4 +276,10 @@ Select3('.select3.no-close',{
 //             dropdown.style.maxHeight =  '0px'
 //         })
 //     }
+// })
+
+// d.querySelector('button').addEventListener('click', (e) => {
+//     e.preventDefault()
+//     const formData = new FormData(e.target.closest('form'))
+//     console.log(formData)
 // })
