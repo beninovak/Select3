@@ -1,5 +1,8 @@
 const d = document
 
+let params = new URLSearchParams(document.location.search)
+console.log(params)
+
 function Select3(selector, options) {
 
     /* Handle closing of select when clicking outside it */
@@ -34,10 +37,12 @@ function Select3(selector, options) {
 
         if (el.tagName !== 'SELECT') continue
 
-        // TODO --> In case no option is selected on select3 init, create empty one and give it the openClose event listener
         // TODO --> Get all selected options from OG <select>
         // TODO --> Escape the text in <option>
         // TODO --> Implement search
+        // TODO --> Add a 'maximumSelectedOptions' option for multiple selects
+        // TODO --> Add some sort of 'disabled' class for options.
+        // TODO --> Don't allow selection of select3 option which was disabled in OG select
         // TODO --> 'submitFormOnSelect' option that takes an id selector. Submit with on 'change' event
         // TODO --> Check all other TODOs
 
@@ -45,6 +50,12 @@ function Select3(selector, options) {
         select3.classList.add('select3')
 
         select3.id = el.id
+
+        select3.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('inner')) {
+                openCloseSelect3(select3)
+            }
+        })
 
         if (el.multiple) {
             select3.classList.add('multiple')
@@ -113,15 +124,6 @@ function Select3(selector, options) {
 
     function appendOptions(originalSelect, select, parent, opts, isMultipleSelect) {
 
-        // let noOptionSelected = true
-        //
-        // for (let opt of opts) {
-        //     if (opt.selected) {
-        //         noOptionSelected = false
-        //         break
-        //     }
-        // }
-
         for (let opt of opts) {
             let optEl = d.createElement('span')
             optEl.setAttribute('data-value', opt.value.toString())
@@ -136,7 +138,6 @@ function Select3(selector, options) {
 
             // Copy selected node for use at the top of select3
             if (opt.selected) {
-                optEl.classList.add('selected')
 
                 let clone = optEl.cloneNode()
                 clone.classList.add('selected-top')
@@ -146,10 +147,9 @@ function Select3(selector, options) {
                 } else {
                     clone.textContent = opt.text
                 }
-                clone.addEventListener('click', () => {
-                    openCloseSelect3(select)
-                })
                 select.prepend(clone)
+
+                optEl.classList.add('selected')
                 optEl.setAttribute('data-selected', '1')
             } else {
                 optEl.setAttribute('data-selected', '0')
@@ -168,8 +168,6 @@ function Select3(selector, options) {
             // Add event listeners to all options
             optEl.addEventListener('click', (e) => {
 
-                originalSelect.value = optEl.getAttribute('data-value')
-
                 // Set behaviour depending on if the select is multiple choice or not
                 if (!isMultipleSelect) {
                     select.querySelectorAll('.inner span').forEach(child => {
@@ -180,8 +178,10 @@ function Select3(selector, options) {
                     optEl.setAttribute('data-selected', '1')
                 } else {
                     if (optEl.getAttribute('data-selected') === '1') {
+                        optEl.classList.remove('selected')
                         optEl.setAttribute('data-selected', '0')
                     } else if (optEl.getAttribute('data-selected') === '0') {
+                        optEl.classList.add('selected')
                         optEl.setAttribute('data-selected', '1')
                     }
                 }
@@ -192,14 +192,27 @@ function Select3(selector, options) {
                 cloneEl.textContent = el.textContent
                 cloneEl.classList.add('selected-top')
 
-                cloneEl.addEventListener('click', () => {
-                    openCloseSelect3(select)
-                })
-
                 if (options.closeOnSelect) {
                     openCloseSelect3(select)
                 }
-                select.querySelector('.selected-top').replaceWith(cloneEl)
+
+                let selectedChildren = select.childNodes
+                let isOptionAlreadySelected = false
+
+                for (let child of selectedChildren) {
+                    if (child.getAttribute('data-value') === cloneEl.getAttribute('data-value')) {
+                        isOptionAlreadySelected = true
+                        break
+                    }
+                }
+
+                if (!isOptionAlreadySelected) {
+                    select.insertBefore(cloneEl, select.querySelector('.inner'))
+                    opt.setAttribute('selected', 'selected')
+                } else {
+                    select.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]').remove()
+                    opt.removeAttribute('selected')
+                }
             })
 
             parent.append(optEl)
@@ -257,7 +270,7 @@ Select3('.select3.groups',{
 })
 
 Select3('.select3.no-close',{
-    closeOnSelect: false,
+    closeOnSelect: true,
 })
 
 // Check if user clicks outside select. If so, close select3s.
