@@ -1,32 +1,6 @@
 const d = document
 
-let params = new URLSearchParams(document.location.search)
-console.log(params)
-
 function Select3(selector, options) {
-
-    /* Handle closing of select when clicking outside it */
-    d.addEventListener('click', (e) => {
-        let el = e.target
-        let clickedSelect = el.closest('.select3')
-
-        // If no parent has class "select3"
-        if (clickedSelect === null) {
-            d.querySelectorAll('div.select3').forEach(node => {
-                let dropdown = node.querySelector('.inner')
-                node.classList.remove('opened')
-                dropdown.style.maxHeight =  '0px'
-            })
-        } else {
-            d.querySelectorAll('div.select3').forEach(node => {
-                if (!node.isEqualNode(clickedSelect)) {
-                    let dropdown = node.querySelector('.inner')
-                    node.classList.remove('opened')
-                    dropdown.style.maxHeight =  '0px'
-                }
-            })
-        }
-    })
 
     // If any options were set, apply them
     options = applyOptions()
@@ -37,13 +11,13 @@ function Select3(selector, options) {
 
         if (el.tagName !== 'SELECT') continue
 
-        // TODO --> Get all selected options from OG <select>
         // TODO --> Escape the text in <option>
         // TODO --> Implement search
         // TODO --> Add a 'maximumSelectedOptions' option for multiple selects
         // TODO --> Add some sort of 'disabled' class for options.
-        // TODO --> Don't allow selection of select3 option which was disabled in OG select
-        // TODO --> 'submitFormOnSelect' option that takes an id selector. Submit with on 'change' event
+        //          Don't allow selection of select3 option which was disabled in OG select
+        // TODO --> Consider if select should close when clicking on the opt group title
+        // TODO --> 'submitFormOnSelect' option that takes an id selector of form. Submit with on 'change' event
         // TODO --> Check all other TODOs
 
         let select3 = d.createElement('div')
@@ -207,11 +181,17 @@ function Select3(selector, options) {
                 }
 
                 if (!isOptionAlreadySelected) {
-                    select.insertBefore(cloneEl, select.querySelector('.inner'))
-                    opt.setAttribute('selected', 'selected')
+                    if (isMultipleSelect) {
+                        select.insertBefore(cloneEl, select.querySelector('.inner'))
+                        opt.setAttribute('selected', 'selected')
+                    } else {
+                        select.querySelector('.selected-top').replaceWith(cloneEl)
+                    }
                 } else {
-                    select.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]').remove()
-                    opt.removeAttribute('selected')
+                    if (isMultipleSelect) {
+                        select.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]').remove()
+                        opt.removeAttribute('selected')
+                    }
                 }
             })
 
@@ -273,23 +253,28 @@ Select3('.select3.no-close',{
     closeOnSelect: true,
 })
 
-// Check if user clicks outside select. If so, close select3s.
-// d.addEventListener('click', (e) => {
-//     let el = e.target
-//
-//     if (el.tagName === 'LABEL' && el.classList.contains('for-select3')) {
-//         e.preventDefault()
-//     }
-//
-//     if (!(el.tagName === 'LABEL' && el.classList.contains('for-select3')) || el.closest('div.select3') === null) {
-//         console.log('DOCUMENT')
-//         d.querySelectorAll('div.select3').forEach(el => {
-//             let dropdown = el.querySelector('.inner')
-//             el.classList.remove('opened')
-//             dropdown.style.maxHeight =  '0px'
-//         })
-//     }
-// })
+/* Handle closing of select when clicking outside it */
+d.addEventListener('click', (e) => {
+    let el = e.target
+    let clickedSelect = el.closest('.select3')
+
+    // If no parent has class "select3"
+    if (clickedSelect === null) {
+        d.querySelectorAll('div.select3').forEach(node => {
+            let dropdown = node.querySelector('.inner')
+            node.classList.remove('opened')
+            dropdown.style.maxHeight =  '0px'
+        })
+    } else {
+        d.querySelectorAll('div.select3').forEach(node => {
+            if (!node.isEqualNode(clickedSelect)) {
+                let dropdown = node.querySelector('.inner')
+                node.classList.remove('opened')
+                dropdown.style.maxHeight =  '0px'
+            }
+        })
+    }
+})
 
 // d.querySelector('button').addEventListener('click', (e) => {
 //     e.preventDefault()
