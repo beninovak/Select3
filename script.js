@@ -11,11 +11,13 @@ function Select3(selector, options) {
 
         if (el.tagName !== 'SELECT') continue
 
-        // TODO --> Escape the text in <option>
+        // TODO --> Arrow on right side of select
+        // TODO --> Add placeholder
+        // TODO --> Escape the text in <option>...should I really tho? up to the user surely...
         // TODO --> Implement search
+        // TODO --> Add 'x' icon on tags in multiple select, enabling them to be removed
+        // TODO --> Add 'maxShownTags' option for multiple selects
         // TODO --> Add a 'maximumSelectedOptions' option for multiple selects
-        // TODO --> Add some sort of 'disabled' class for options.
-        //          Don't allow selection of select3 option which was disabled in OG select
         // TODO --> Consider if select should close when clicking on the opt group title
         // TODO --> 'submitFormOnSelect' option that takes an id selector of form. Submit with on 'change' event
         // TODO --> Check all other TODOs
@@ -26,7 +28,9 @@ function Select3(selector, options) {
         select3.id = el.id
 
         select3.addEventListener('click', (e) => {
-            if (!e.target.classList.contains('inner')) {
+            if (el.multiple && e.target.classList.contains('select3')) {
+                openCloseSelect3(select3)
+            } else if (!el.multiple && e.target.classList.contains('selected-top')) {
                 openCloseSelect3(select3)
             }
         })
@@ -121,6 +125,14 @@ function Select3(selector, options) {
                 } else {
                     clone.textContent = opt.text
                 }
+
+                if (isMultipleSelect) {
+                    let close = document.createElement('b')
+                    close.classList.add('remove')
+                    close.textContent = '×'
+                    clone.prepend(close)
+                }
+
                 select.prepend(clone)
 
                 optEl.classList.add('selected')
@@ -137,66 +149,99 @@ function Select3(selector, options) {
 
             if (opt.disabled) {
                 optEl.classList.add('disabled')
-            }
+            } else {
+                optEl.addEventListener('click', (e) => {
 
-            // Add event listeners to all options
-            optEl.addEventListener('click', (e) => {
-
-                // Set behaviour depending on if the select is multiple choice or not
-                if (!isMultipleSelect) {
-                    select.querySelectorAll('.inner span').forEach(child => {
-                        child.classList.remove('selected')
-                        child.setAttribute('data-selected', '0')
-                    })
-                    optEl.classList.add('selected')
-                    optEl.setAttribute('data-selected', '1')
-                } else {
-                    if (optEl.getAttribute('data-selected') === '1') {
-                        optEl.classList.remove('selected')
-                        optEl.setAttribute('data-selected', '0')
-                    } else if (optEl.getAttribute('data-selected') === '0') {
+                    // Set behaviour depending on if the select is multiple choice or not
+                    if (!isMultipleSelect) {
+                        select.querySelectorAll('.inner span').forEach(child => {
+                            child.classList.remove('selected')
+                            child.setAttribute('data-selected', '0')
+                        })
                         optEl.classList.add('selected')
                         optEl.setAttribute('data-selected', '1')
-                    }
-                }
-
-                let el = e.target
-                let cloneEl = el.cloneNode()
-
-                cloneEl.textContent = el.textContent
-                cloneEl.classList.add('selected-top')
-
-                if (options.closeOnSelect) {
-                    openCloseSelect3(select)
-                }
-
-                let selectedChildren = select.childNodes
-                let isOptionAlreadySelected = false
-
-                for (let child of selectedChildren) {
-                    if (child.getAttribute('data-value') === cloneEl.getAttribute('data-value')) {
-                        isOptionAlreadySelected = true
-                        break
-                    }
-                }
-
-                if (!isOptionAlreadySelected) {
-                    if (isMultipleSelect) {
-                        select.insertBefore(cloneEl, select.querySelector('.inner'))
-                        opt.setAttribute('selected', 'selected')
                     } else {
-                        select.querySelector('.selected-top').replaceWith(cloneEl)
+                        if (optEl.getAttribute('data-selected') === '1') {
+                            optEl.classList.remove('selected')
+                            optEl.setAttribute('data-selected', '0')
+                        } else if (optEl.getAttribute('data-selected') === '0') {
+                            optEl.classList.add('selected')
+                            optEl.setAttribute('data-selected', '1')
+                        }
                     }
-                } else {
+
+                    let el = e.target
+                    let cloneEl = el.cloneNode()
+
+                    cloneEl.textContent = el.textContent
+                    cloneEl.classList.add('selected-top')
+
                     if (isMultipleSelect) {
-                        select.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]').remove()
-                        opt.removeAttribute('selected')
+                        let close = document.createElement('b')
+                        close.classList.add('remove')
+                        close.textContent = '×'
+                        cloneEl.prepend(close)
                     }
-                }
-            })
+
+                    if (options.closeOnSelect) {
+                        openCloseSelect3(select)
+                    }
+
+                    let selectedChildren = select.childNodes
+                    let isOptionAlreadySelected = false
+
+                    for (let child of selectedChildren) {
+                        if (child.getAttribute('data-value') === cloneEl.getAttribute('data-value')) {
+                            isOptionAlreadySelected = true
+                            break
+                        }
+                    }
+
+                    if (!isOptionAlreadySelected) {
+                        if (isMultipleSelect) {
+                            select.insertBefore(cloneEl, select.querySelector('.inner'))
+                            opt.setAttribute('selected', 'selected')
+                        } else {
+                            select.querySelector('.selected-top').replaceWith(cloneEl)
+                        }
+                    } else {
+                        if (isMultipleSelect) {
+                            select.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]').remove()
+                            opt.removeAttribute('selected')
+                        }
+                    }
+                })
+            }
 
             parent.append(optEl)
         }
+
+        // Enable deselection option in multiple select by clicking on the 'X' in the tag
+        if (isMultipleSelect) {
+            select.querySelectorAll('b.remove').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    removeOption(originalSelect, select, e.target.parentElement)
+                })
+            })
+        }
+    }
+
+    function removeOption(originalSelect, select, option) {
+
+        let value = option.getAttribute('data-value')
+
+        let originalSelectOption = originalSelect.querySelector('option[value="' + value + '"]')
+
+        originalSelectOption.removeAttribute('selected')
+
+        console.log(originalSelectOption)
+
+        let select3Option = select.querySelector('.inner span[data-value="' + value + '"]')
+
+        console.log(select3Option)
+
+        select3Option.classList.remove('selected')
+        select3Option.setAttribute('data-selected', '0')
     }
 
     function applyOptions() {
@@ -250,31 +295,32 @@ Select3('.select3.groups',{
 })
 
 Select3('.select3.no-close',{
-    closeOnSelect: true,
+    closeOnSelect: false,
 })
 
 /* Handle closing of select when clicking outside it */
-d.addEventListener('click', (e) => {
-    let el = e.target
-    let clickedSelect = el.closest('.select3')
-
-    // If no parent has class "select3"
-    if (clickedSelect === null) {
-        d.querySelectorAll('div.select3').forEach(node => {
-            let dropdown = node.querySelector('.inner')
-            node.classList.remove('opened')
-            dropdown.style.maxHeight =  '0px'
-        })
-    } else {
-        d.querySelectorAll('div.select3').forEach(node => {
-            if (!node.isEqualNode(clickedSelect)) {
-                let dropdown = node.querySelector('.inner')
-                node.classList.remove('opened')
-                dropdown.style.maxHeight =  '0px'
-            }
-        })
-    }
-})
+// d.addEventListener('click', (e) => {
+//     let el = e.target
+//     let clickedSelect = el.closest('.select3')
+//     console.log(clickedSelect)
+//
+//     // If no parent has class "select3"
+//     if (clickedSelect === null) {
+//         d.querySelectorAll('div.select3').forEach(node => {
+//             let dropdown = node.querySelector('.inner')
+//             node.classList.remove('opened')
+//             dropdown.style.maxHeight =  '0px'
+//         })
+//     } else {
+//         d.querySelectorAll('div.select3').forEach(node => {
+//             if (!node.isEqualNode(clickedSelect)) {
+//                 let dropdown = node.querySelector('.inner')
+//                 node.classList.remove('opened')
+//                 dropdown.style.maxHeight =  '0px'
+//             }
+//         })
+//     }
+// })
 
 // d.querySelector('button').addEventListener('click', (e) => {
 //     e.preventDefault()

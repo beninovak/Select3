@@ -58,12 +58,14 @@ div.select3.opened {
     background: #fff;
     max-height: 0;
     overflow: hidden;
-    transition: 0.3s max-height;
+    border-top: 1px solid transparent; /* WIP */
+    transition: 0.3s max-height, 0.3s border-color;
 }
 
 .select3 > .selected-top {
     width: 100%;
-    height: 100%;
+    /*height: 100%;*/
+    height: 40px;
     display: block;
     background: #fff;
 }
@@ -74,21 +76,24 @@ div.select3.opened {
 
 .select3 .inner span {
     width: 100%;
+    height: 40px; /* Possibly WIP */
     display: block;
     text-align: start;
     padding-inline-start: 30px;
 }
 
-.select3 .inner span.selected {
+.select3 .inner span:not(.title):hover {
+    background: #efefef;
+}
+
+.select3 .inner span:not(.title).selected {
     font-weight: bold;
     background: #e0e0e0;
 }
 
-.select3 .inner span.title {
-    font-size: 90%;
-    font-weight: bold;
-    font-style: italic;
-    padding-inline-start: 10px;
+.select3 .inner span.disabled {
+    opacity: 0.7;
+    background: #c0c0c0;
 }
 
 /* Multiple select */
@@ -99,20 +104,48 @@ div.select3.opened {
 }
 
 .select3.multiple > .selected-top {
+    position: relative;
     display: inline-block;
     width: fit-content;
     height: 70%;
     align-self: center;
     line-height: 28px;
-    padding-inline: 5px;
+    padding-inline-end: 5px;
+    padding-inline-start: 30px;
     margin-inline: 5px;
     background: #c6c6c6;
     border-radius: 10px;
     font-size: 14px;
 }
 
+.select3.multiple > .selected-top b.remove {
+    position: absolute;
+    left: 0;
+    display: inline-block;
+    width: 25px;
+    height: 100%;
+    font-size: 16px;
+    line-height: 28px;
+    text-align: center;
+    padding-inline: 8px 5px;
+    transition: 0.3s background;
+    border-radius: 10px 0 0 10px;
+    border-inline-end: 1px solid gray;
+}
+
+.select3.multiple > .selected-top b.remove:hover {
+    background: #a6a6a6;
+}
+
 .select3.multiple .inner {
     width: 100%;
+}
+
+.select3.multiple .inner span.title {
+    font-size: 90%;
+    font-weight: bold;
+    font-style: italic;
+    padding-inline-start: 10px;
 }
 
 .select3.multiple .inner span {
@@ -132,7 +165,8 @@ div.select3.opened {
 }
 
 .select3.multiple .inner span[data-selected="1"]::after {
-    content: url("checkmark.svg");
+    content: "";
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='12px' height='12px' viewBox='0 0 12 12' version='1.1'%3e%3cg id='surface1'%3e%3cpath style=' stroke:none;fill-rule:nonzero;fill:rgb(0%25,0%25,0%25);fill-opacity:1;' d='M 11.949219 2.910156 L 4.511719 10.351562 C 4.445312 10.417969 4.339844 10.417969 4.273438 10.351562 L 0.0507812 6.128906 C -0.015625 6.0625 -0.015625 5.957031 0.0507812 5.890625 L 1.074219 4.863281 C 1.140625 4.796875 1.246094 4.796875 1.3125 4.863281 L 4.390625 7.941406 L 10.6875 1.648438 C 10.753906 1.582031 10.859375 1.582031 10.925781 1.648438 L 11.949219 2.675781 C 12.015625 2.738281 12.015625 2.847656 11.949219 2.910156 Z M 11.949219 2.910156 '/%3e%3c/g%3e%3c/svg%3e");
     position: absolute;
     top: 14px;
     inset-inline-start: 17px;
