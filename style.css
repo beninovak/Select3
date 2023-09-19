@@ -153,7 +153,7 @@ div.select3.opened {
     padding-inline-start: 45px;
 }
 
-.select3.multiple .inner span::before {
+.select3.multiple .inner span:not(.title)::before {
     content: '';
     position: absolute;
     top: 12px;

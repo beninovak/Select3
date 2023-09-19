@@ -1,11 +1,10 @@
-const d = document
-
 function Select3(selector, options) {
 
     // If any options were set, apply them
     options = applyOptions()
+    console.log(options)
 
-    const elements = d.querySelectorAll(selector)
+    const elements = document.querySelectorAll(selector)
 
     for (let el of elements) {
 
@@ -14,19 +13,21 @@ function Select3(selector, options) {
         // TODO --> Arrow on right side of select
         // TODO --> Add placeholder
         // TODO --> Escape the text in <option>...should I really tho? up to the user surely...
-        // TODO --> Implement search
-        // TODO --> Add 'x' icon on tags in multiple select, enabling them to be removed
+        // TODO --> Transfer classes from OG select to select3 elements
         // TODO --> Add 'maxShownTags' option for multiple selects
         // TODO --> Add a 'maximumSelectedOptions' option for multiple selects
+        // TODO --> Try with form POSTs
         // TODO --> Consider if select should close when clicking on the opt group title
-        // TODO --> 'submitFormOnSelect' option that takes an id selector of form. Submit with on 'change' event
+        // TODO --> 'submitFormOnSelect' option that takes an id selector of form. Submit with on 'change' event (dispatchEvent(new Event('change')))
+        // TODO --> Check all scenarios (single selection with and without optgroups and multiple selection with and without optgroups)
         // TODO --> Check all other TODOs
 
-        let select3 = d.createElement('div')
+        let select3 = document.createElement('div')
         select3.classList.add('select3')
 
         select3.id = el.id
 
+        // Handles closing
         select3.addEventListener('click', (e) => {
             if (el.multiple && e.target.classList.contains('select3')) {
                 openCloseSelect3(select3)
@@ -39,10 +40,32 @@ function Select3(selector, options) {
             select3.classList.add('multiple')
         }
 
-        let inner = d.createElement('div')
+        let inner = document.createElement('div')
         inner.classList.add('inner')
 
-        let label = d.querySelector('label[for="' + el.id + '"]')
+        // Add search input
+        if (options.search) {
+            let input = document.createElement('input')
+            input.classList.add('select3-search')
+            input.setAttribute('type', 'search')
+
+            let previousSearchLength = 0
+
+            input.addEventListener('keyup', (e) => {
+
+                let searchLength = e.target.value.length
+
+                if (searchLength >= options.minimumInputLength || searchLength < previousSearchLength) {
+                    let childNodes = e.target.parentElement.querySelectorAll('span:not(.title)')
+                    filterInput(e.target.value, childNodes)
+                }
+
+                previousSearchLength = searchLength
+            })
+            inner.prepend(input)
+        }
+
+        let label = document.querySelector('label[for="' + el.id + '"]')
 
         if (label !== null) {
             label.classList.add('for-select3')
@@ -58,16 +81,17 @@ function Select3(selector, options) {
         if (!optGroups.length) {
             appendOptions(el, select3, inner, opts, el.multiple)
         } else {
-            if (el[0].tagName === 'OPTION') {
-                let nodeList = el.querySelectorAll(':scope > option')
-                appendOptions(el, select3, inner, nodeList, false)
-            }
+            // if (el[0].tagName === 'OPTION') { /* TODO The fuck je ta if?? WHY?!?!? */
+            //     console.log('WACKY IF')
+            //     let nodeList = el.querySelectorAll(':scope > option')
+            //     appendOptions(el, select3, inner, nodeList, false)
+            // }
 
             optGroups.forEach(group => {
-                let optGroupEl = d.createElement('div')
+                let optGroupEl = document.createElement('div')
                 optGroupEl.classList.add('optgroup')
 
-                let optGroupTitle = d.createElement('span')
+                let optGroupTitle = document.createElement('span')
                 optGroupTitle.classList.add('title')
                 optGroupTitle.textContent = group.label
 
@@ -81,6 +105,14 @@ function Select3(selector, options) {
             })
         }
 
+        // Enable deselection option in multiple select by clicking on the 'X' in the tag
+        if (el.multiple) {
+            select3.querySelectorAll('b.remove').forEach(elem => {
+                elem.addEventListener('click', (e) => {
+                    removeOption(el, select3, e.target.parentElement)
+                })
+            })
+        }
         select3.append(inner)
 
         el.style.display = 'none'
@@ -103,7 +135,7 @@ function Select3(selector, options) {
     function appendOptions(originalSelect, select, parent, opts, isMultipleSelect) {
 
         for (let opt of opts) {
-            let optEl = d.createElement('span')
+            let optEl = document.createElement('span')
             optEl.setAttribute('data-value', opt.value.toString())
 
             // Transfer data- attributes
@@ -133,7 +165,7 @@ function Select3(selector, options) {
                     clone.prepend(close)
                 }
 
-                select.prepend(clone)
+                select.append(clone)
 
                 optEl.classList.add('selected')
                 optEl.setAttribute('data-selected', '1')
@@ -215,15 +247,6 @@ function Select3(selector, options) {
 
             parent.append(optEl)
         }
-
-        // Enable deselection option in multiple select by clicking on the 'X' in the tag
-        if (isMultipleSelect) {
-            select.querySelectorAll('b.remove').forEach(el => {
-                el.addEventListener('click', (e) => {
-                    removeOption(originalSelect, select, e.target.parentElement)
-                })
-            })
-        }
     }
 
     function removeOption(originalSelect, select, option) {
@@ -233,22 +256,33 @@ function Select3(selector, options) {
         let originalSelectOption = originalSelect.querySelector('option[value="' + value + '"]')
 
         originalSelectOption.removeAttribute('selected')
-
-        console.log(originalSelectOption)
-
         let select3Option = select.querySelector('.inner span[data-value="' + value + '"]')
-
-        console.log(select3Option)
 
         select3Option.classList.remove('selected')
         select3Option.setAttribute('data-selected', '0')
+
+        option.remove()
+    }
+
+    function filterInput(filter, options) {
+        filter = filter.toUpperCase();
+        for (opt of options) {
+            txtValue = opt.textContent || opt.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        }
     }
 
     function applyOptions() {
         /* All possible options and their default values */
         const opts = {
+            search: true,
             closeOnSelect: true,
-            allowNoSelection: false,
+            // allowNoSelection: false,
+            minimumInputLength: 3,
         }
 
         for (let property in options) {
@@ -281,6 +315,14 @@ function Select3(selector, options) {
                 typeof value === 'boolean' ? isValid = true : isValid = false
                 break
 
+            case 'search':
+                typeof value === 'boolean' ? isValid = true : isValid = false
+                break
+
+            case 'minimumInputLength':
+                typeof value === 'number' && value > 0 ? isValid = true : isValid = false
+                break
+
             default:
                 break
         }
@@ -291,28 +333,30 @@ function Select3(selector, options) {
 
 // Program start
 Select3('.select3.groups',{
-    closeOnSelect: true,
+    search: true,
+    closeOnSelect: false,
+    minimumInputLength: 3,
 })
 
-Select3('.select3.no-close',{
-    closeOnSelect: false,
-})
+// Select3('.select3.no-close',{
+//     closeOnSelect: false,
+// })
 
 /* Handle closing of select when clicking outside it */
-// d.addEventListener('click', (e) => {
+// document.addEventListener('click', (e) => {
 //     let el = e.target
 //     let clickedSelect = el.closest('.select3')
 //     console.log(clickedSelect)
 //
 //     // If no parent has class "select3"
 //     if (clickedSelect === null) {
-//         d.querySelectorAll('div.select3').forEach(node => {
+//         document.querySelectorAll('div.select3').forEach(node => {
 //             let dropdown = node.querySelector('.inner')
 //             node.classList.remove('opened')
 //             dropdown.style.maxHeight =  '0px'
 //         })
 //     } else {
-//         d.querySelectorAll('div.select3').forEach(node => {
+//         document.querySelectorAll('div.select3').forEach(node => {
 //             if (!node.isEqualNode(clickedSelect)) {
 //                 let dropdown = node.querySelector('.inner')
 //                 node.classList.remove('opened')
@@ -322,7 +366,7 @@ Select3('.select3.no-close',{
 //     }
 // })
 
-// d.querySelector('button').addEventListener('click', (e) => {
+// document.querySelector('button').addEventListener('click', (e) => {
 //     e.preventDefault()
 //     const formData = new FormData(e.target.closest('form'))
 //     console.log(formData)
