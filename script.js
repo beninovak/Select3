@@ -12,20 +12,31 @@ function Select3(selector, options) {
 
         // TODO --> Arrow on right side of select
         // TODO --> Add placeholder
-        // TODO --> Escape the text in <option>...should I really tho? up to the user surely...
-        // TODO --> Transfer classes from OG select to select3 elements
         // TODO --> Add 'maxShownTags' option for multiple selects
         // TODO --> Add a 'maximumSelectedOptions' option for multiple selects
+        // TODO --> Add some sort of option to allow empty selection ( needed for deciding when to show the placeholder as well )
+        // TODO --> Consider option to allow user to click on an already selected option to unselect it
         // TODO --> Try with form POSTs
-        // TODO --> Consider if select should close when clicking on the opt group title
         // TODO --> 'submitFormOnSelect' option that takes an id selector of form. Submit with on 'change' event (dispatchEvent(new Event('change')))
         // TODO --> Check all scenarios (single selection with and without optgroups and multiple selection with and without optgroups)
         // TODO --> Check all other TODOs
+        // TODO --> Test on mobile
 
         let select3 = document.createElement('div')
         select3.classList.add('select3')
 
         select3.id = el.id
+
+        for (cls of el.classList) {
+            select3.classList.add(cls)
+        }
+
+        if (options.placeholder.length > 0) {
+            let placeholder = document.createElement('span')
+            placeholder.classList.add('placeholder')
+            placeholder.textContent = options.placeholder
+            select3.prepend(placeholder)
+        }
 
         // Handles closing
         select3.addEventListener('click', (e) => {
@@ -46,7 +57,7 @@ function Select3(selector, options) {
         // Add search input
         if (options.search) {
             let input = document.createElement('input')
-            input.classList.add('select3-search')
+            input.classList.add('search')
             input.setAttribute('type', 'search')
 
             let previousSearchLength = 0
@@ -121,7 +132,7 @@ function Select3(selector, options) {
 
     function openCloseSelect3(select) {
         let dropdown = select.querySelector('.inner')
-        let dropdownHeight = dropdown.scrollHeight
+        let dropdownHeight = dropdown.scrollHeight > options.dropdownMaxHeight ? options.dropdownMaxHeight : dropdown.scrollHeight
 
         select.classList.toggle('opened')
 
@@ -247,6 +258,8 @@ function Select3(selector, options) {
 
             parent.append(optEl)
         }
+
+        console.log(select)
     }
 
     function removeOption(originalSelect, select, option) {
@@ -269,9 +282,27 @@ function Select3(selector, options) {
         for (opt of options) {
             txtValue = opt.textContent || opt.innerText;
             if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                opt.style.display = "";
+                opt.style.display = ''
             } else {
-                opt.style.display = "none";
+                opt.style.display = 'none'
+            }
+
+            let isAnyOptionVisible = false
+            let siblings = opt.parentElement.querySelectorAll('span:not(.title)')
+
+            // console.log(siblings)
+
+            for (sibling of siblings) {
+                if (sibling.style.display !== 'none') {
+                    isAnyOptionVisible = true
+                    break
+                }
+            }
+
+            if (isAnyOptionVisible) {
+                opt.parentElement.style.display = ''
+            } else {
+                opt.parentElement.style.display = 'none'
             }
         }
     }
@@ -283,6 +314,8 @@ function Select3(selector, options) {
             closeOnSelect: true,
             // allowNoSelection: false,
             minimumInputLength: 3,
+            placeholder: '',
+            dropdownMaxHeight: 300,
         }
 
         for (let property in options) {
@@ -323,6 +356,14 @@ function Select3(selector, options) {
                 typeof value === 'number' && value > 0 ? isValid = true : isValid = false
                 break
 
+            case 'placeholder':
+                typeof value === 'string' ? isValid = true : isValid = false
+                break
+
+            case 'dropdownMaxHeight':
+                typeof value === 'number' && value > 0 ? isValid = true : isValid = false
+                break
+
             default:
                 break
         }
@@ -335,7 +376,9 @@ function Select3(selector, options) {
 Select3('.select3.groups',{
     search: true,
     closeOnSelect: false,
-    minimumInputLength: 3,
+    minimumInputLength: 1,
+    dropdownMaxHeight: 300,
+    placeholder: 'Please select an option',
 })
 
 // Select3('.select3.no-close',{

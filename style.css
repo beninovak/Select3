@@ -10,6 +10,7 @@ body {
     margin: 0;
     overflow-x: hidden;
     background: #575757;
+    padding-bottom: 500px;
 }
 
 *, *::after, *::before {
@@ -57,21 +58,36 @@ div.select3.opened {
     right: 0;
     background: #fff;
     max-height: 0;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     border-top: 1px solid transparent; /* WIP */
     transition: 0.3s max-height, 0.3s border-color;
 }
 
 .select3 > .selected-top {
     width: 100%;
-    /*height: 100%;*/
     height: 40px;
     display: block;
     background: #fff;
 }
 
+.select3 > .placeholder {
+    color: #666;
+    width: 100%;
+    height: 40px;
+    display: none;
+    background: #fff;
+}
+
 .select3.opened > .inner {
     border-top: 1px solid #000;
+}
+
+.select3 .inner input.search {
+    font-size: 18px;
+    height: 24px;
+    padding: 3px;
+    width: calc(100% - 20px);
 }
 
 .select3 .inner span {
@@ -141,14 +157,14 @@ div.select3.opened {
     width: 100%;
 }
 
-.select3.multiple .inner span.title {
+.select3 .inner span.title {
     font-size: 90%;
     font-weight: bold;
     font-style: italic;
     padding-inline-start: 10px;
 }
 
-.select3.multiple .inner span {
+.select3.multiple .inner span:not(.title) {
     position: relative;
     padding-inline-start: 45px;
 }
