@@ -60,8 +60,7 @@ div.select3.opened {
     max-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
-    border-top: 1px solid transparent; /* WIP */
-    transition: 0.3s max-height, 0.3s border-color;
+    transition: 0.3s max-height;
 }
 
 .select3 > .selected-top {
@@ -77,10 +76,6 @@ div.select3.opened {
     height: 40px;
     display: none;
     background: #fff;
-}
-
-.select3.opened > .inner {
-    border-top: 1px solid #000;
 }
 
 .select3 .inner input.search {
