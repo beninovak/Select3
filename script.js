@@ -10,7 +10,6 @@ function Select3(selector, config) {
 
         if (select.tagName !== 'SELECT') continue
 
-        // TODO --> Add a 'maximumSelectedOptions' option for multiple selects. [ What to do when more are already preselected? Maybe ignore all above given max?? Maybe change to selected options count?? ]
         // TODO --> Add 'maxShownTags' option for multiple selects
         // TODO --> Add placeholder
         // TODO --> Add some sort of option to allow empty selection ( needed for deciding when to show the placeholder as well )
@@ -41,6 +40,13 @@ function Select3(selector, config) {
             //     Select3_openCloseSelect3(select3, config)
             // }
         })
+
+
+        if (select.selectedOptions.length > config.maximumSelectedOptions) {
+            config.maximumSelectedOptions = select.selectedOptions.length
+        }
+        console.table(config)
+
 
         if (select.multiple) {
             select3.classList.add('multiple')
@@ -205,6 +211,12 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
 
         optEl.addEventListener('click', (e) => {
 
+            let el = e.target
+            let cloneEl = el.cloneNode()
+
+            cloneEl.textContent = el.textContent
+            cloneEl.classList.add('selected-top')
+
             // Can only do stuff if the option in the original select is not disabled
             if (!opt.disabled) {
 
@@ -214,7 +226,10 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                     let tag = select3.querySelector(':scope > span[data-value="' + value + '"]')
 
                     Select3_removeOption(select, select3, e.target, false) // Deselect option
-                    Select3_removeOption(select, select3, tag, true) // Remove tag
+
+                    if (tag !== null) {
+                        Select3_removeOption(select, select3, tag, true) // Remove tag
+                    }
                     return
                 }
 
@@ -234,15 +249,7 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                         optEl.classList.add('selected')
                         optEl.setAttribute('data-selected', '1')
                     }
-                }
 
-                let el = e.target
-                let cloneEl = el.cloneNode()
-
-                cloneEl.textContent = el.textContent
-                cloneEl.classList.add('selected-top')
-
-                if (isMultipleSelect) {
                     let closeBtn = document.createElement('b')
                     closeBtn.classList.add('remove')
                     closeBtn.textContent = '×'
@@ -251,10 +258,6 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                     closeBtn.addEventListener('click', (e) => {
                         Select3_removeOption(select, select3, e.target.parentElement, true)
                     })
-                }
-
-                if (config.closeOnSelect) {
-                    Select3_openCloseSelect3(select3, config)
                 }
 
                 let selectedChildren = select3.childNodes
@@ -279,6 +282,10 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                         select3.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]').remove()
                         opt.removeAttribute('selected')
                     }
+                }
+
+                if (config.closeOnSelect) {
+                    Select3_openCloseSelect3(select3, config)
                 }
             }
         })
@@ -324,7 +331,6 @@ function Select3_filterInput(filter, options) {
                 break
             }
         }
-
 
         if (opt.closest('div.optgroup') !== null) {
             if (isAnyOptionVisible) {
@@ -410,7 +416,7 @@ Select3('.select3.groups',{
     closeOnSelect: false,
     minimumInputLength: 2,
     dropdownMaxHeight: 300,
-    maximumSelectedOptions: 3,
+    maximumSelectedOptions: 4,
     placeholder: 'Please select an option',
 })
 
