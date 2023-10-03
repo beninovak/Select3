@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BetterSelect</title>
+    <title>Select3</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,38 +13,40 @@
         <input type="hidden" name="test" value="some value"/>
 
         <label for="select3">Custom select 1</label>
-        <select multiple="" id="select3" class="select3 groups" name="w-optgroups">
+        <select multiple="multiple" id="select3" class="select3 groups" name="w-optgroups">
             <!--<option value="" selected="selected"></option>-->
             <!--<option value="zero"></option>-->
             <optgroup label="optgroup 1">
                 <option value="banana">Banana</option>
                 <option value="apple">Apple</option>
-                <option value="pomegranate">Pomegranate</option>
+                <option selected="selected" value="pomegranate">Pomegranate</option>
+                <option value="lidl">Lidl</option>
+                <option value="ledl">Ledl</option>
             </optgroup>
             <optgroup label="optgroup 2">
                 <option value="pear">Pear</option>
                 <option value="lemon">Lemon</option>
                 <option value="lime">Lime</option>
                 <option value="grape">Grape</option>
-                <option value="grape">Grozd</option>
+                <option value="grozd">Grozd</option>
                 <option value="grapefruit">Grapefruit</option>
             </optgroup>
         </select>
     </form>
 
-<!--    <form id="test-form2" method="get">-->
-<!--        <label for="basic-select">Custom select 2</label>-->
-<!--        <select id="basic-select" class="select3 no-close" name="no-optgroups" multiple="multiple">-->
-<!--            &lt;!&ndash;<option value=""></option>&ndash;&gt;-->
-<!--            <option value="one">Option 1</option>-->
-<!--            <option disabled value="two">Option 2</option>-->
-<!--            <option selected="selected" value="three">Option 3</option>-->
-<!--            <option value="four" label="4 - four - 4">Option 4</option>-->
-<!--            <option value="five">Option 5</option>-->
-<!--        </select>-->
-<!--        <br/>-->
+    <form id="test-form2" method="get">
+        <label for="basic-select">Custom select 2</label>
+        <select id="basic-select" class="select3 no-close" name="no-optgroups">
+<!--            <option value=""></option>-->
+            <option selected="selected" value="one">Option 1</option>
+            <option value="two">Option 2</option>
+            <option disabled value="three">Option 3</option>
+            <option value="four" label="4 - four - 4">Option 4</option>
+            <option value="five">Option 5</option>
+        </select>
+        <br/>
 <!--        <button type="submit">Submit form</button>-->
-<!--    </form>-->
+    </form>
 </div>
 
 <script src="script.js"></script>

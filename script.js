@@ -10,7 +10,7 @@ function Select3(selector, config) {
 
         if (select.tagName !== 'SELECT') continue
 
-        // TODO --> Add a 'maximumSelectedOptions' option for multiple selects. [ What to do when more are already preselected? Maybe ignore all above given max?? ]
+        // TODO --> Add a 'maximumSelectedOptions' option for multiple selects. [ What to do when more are already preselected? Maybe ignore all above given max?? Maybe change to selected options count?? ]
         // TODO --> Add 'maxShownTags' option for multiple selects
         // TODO --> Add placeholder
         // TODO --> Add some sort of option to allow empty selection ( needed for deciding when to show the placeholder as well )
