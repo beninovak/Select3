@@ -2,7 +2,7 @@ function Select3(selector, config) {
 
     // If any options were set, apply them
     config = Select3_applyConfig(config)
-    console.log(config)
+    console.table(config)
 
     const elements = document.querySelectorAll(selector)
 
@@ -10,17 +10,16 @@ function Select3(selector, config) {
 
         if (select.tagName !== 'SELECT') continue
 
-        // TODO --> Arrow on right side of select
-        // TODO --> Add placeholder
+        // TODO --> Add a 'maximumSelectedOptions' option for multiple selects. [ What to do when more are already preselected? Maybe ignore all above given max?? ]
         // TODO --> Add 'maxShownTags' option for multiple selects
-        // TODO --> Add a 'maximumSelectedOptions' option for multiple selects
+        // TODO --> Add placeholder
         // TODO --> Add some sort of option to allow empty selection ( needed for deciding when to show the placeholder as well )
-        // TODO --> Consider option to allow user to click on an already selected option to unselect it
         // TODO --> Try with form POSTs
         // TODO --> 'submitFormOnSelect' option that takes an id selector of form. Submit with on 'change' event (dispatchEvent(new Event('change')))
         // TODO --> Check all scenarios (single selection with and without optgroups and multiple selection with and without optgroups)
         // TODO --> Check all other TODOs
         // TODO --> Test on mobile
+        // TODO --> Minimize file: https://codebeautify.org/minify-js
 
         let select3 = document.createElement('div')
         select3.classList.add('select3')
@@ -45,6 +44,8 @@ function Select3(selector, config) {
 
         if (select.multiple) {
             select3.classList.add('multiple')
+        } else {
+            select3.classList.add('single')
         }
 
         let inner = document.createElement('div')
@@ -105,15 +106,6 @@ function Select3(selector, config) {
                 inner.append(optGroupEl)
             })
         }
-
-
-        // if (select.multiple) {
-        //     select3.querySelectorAll('b.remove').forEach(elem => {
-        //         elem.addEventListener('click', (e) => {
-        //             Select3_removeOption(select, select3, e.target.parentElement)
-        //         })
-        //     })
-        // }
         select3.append(inner)
 
 
@@ -187,7 +179,7 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
 
                 // Enable deselection option in multiple select by clicking on the 'X' in the tag
                 closeBtn.addEventListener('click', (e) => {
-                    Select3_removeOption(select, select3, e.target.parentElement)
+                    Select3_removeOption(select, select3, e.target.parentElement, true)
                 })
 
                 clone.prepend(closeBtn)
@@ -209,8 +201,22 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
 
         if (opt.disabled) {
             optEl.classList.add('disabled')
-        } else {
-            optEl.addEventListener('click', (e) => {
+        }
+
+        optEl.addEventListener('click', (e) => {
+
+            // Can only do stuff if the option in the original select is not disabled
+            if (!opt.disabled) {
+
+                if (select.selectedOptions.length >= config.maximumSelectedOptions) {
+
+                    let value = e.target.dataset.value
+                    let tag = select3.querySelector(':scope > span[data-value="' + value + '"]')
+
+                    Select3_removeOption(select, select3, e.target, false) // Deselect option
+                    Select3_removeOption(select, select3, tag, true) // Remove tag
+                    return
+                }
 
                 // Set behaviour depending on if the select is multiple choice or not
                 if (!isMultipleSelect) {
@@ -243,7 +249,7 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                     cloneEl.prepend(closeBtn)
 
                     closeBtn.addEventListener('click', (e) => {
-                        Select3_removeOption(select, select3, e.target.parentElement)
+                        Select3_removeOption(select, select3, e.target.parentElement, true)
                     })
                 }
 
@@ -274,14 +280,14 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                         opt.removeAttribute('selected')
                     }
                 }
-            })
-        }
+            }
+        })
 
         parent.append(optEl)
     }
 }
 
-function Select3_removeOption(select, select3, option) {
+function Select3_removeOption(select, select3, option, removeOption) {
     let value = option.getAttribute('data-value')
 
     let selectOption = select.querySelector('option[value="' + value + '"]')
@@ -292,13 +298,17 @@ function Select3_removeOption(select, select3, option) {
     select3Option.classList.remove('selected')
     select3Option.setAttribute('data-selected', '0')
 
-    option.remove()
+    if (removeOption) {
+        option.remove()
+    }
 }
 
 function Select3_filterInput(filter, options) {
-    filter = filter.toUpperCase();
-    for (opt of options) {
-        txtValue = opt.textContent || opt.innerText;
+
+    filter = filter.toUpperCase()
+
+    for (let opt of options) {
+        let txtValue = opt.textContent || opt.innerText
         if (txtValue.toUpperCase().indexOf(filter) > -1) {
             opt.style.display = ''
         } else {
@@ -308,36 +318,41 @@ function Select3_filterInput(filter, options) {
         let isAnyOptionVisible = false
         let siblings = opt.parentElement.querySelectorAll('span:not(.title)')
 
-        for (sibling of siblings) {
+        for (let sibling of siblings) {
             if (sibling.style.display !== 'none') {
                 isAnyOptionVisible = true
                 break
             }
         }
 
-        if (isAnyOptionVisible) {
-            opt.parentElement.style.display = ''
-        } else {
-            opt.parentElement.style.display = 'none'
+
+        if (opt.closest('div.optgroup') !== null) {
+            if (isAnyOptionVisible) {
+                opt.closest('div.optgroup').style.display = ''
+            } else {
+                opt.closest('div.optgroup').style.display = 'none'
+            }
         }
     }
 }
 
 function Select3_applyConfig(config) {
+
     /* All possible options and their default values */
     const confs = {
         search: true,
         closeOnSelect: true,
-        allowNoSelection: false,
         minimumInputLength: 3,
         placeholder: '',
         dropdownMaxHeight: 300,
+        maximumSelectedOptions: 10000,
+        // allowNoSelection: false,
     }
 
     for (let property in config) {
-        // If 'options' argument contains a non-supported property, don't add it to 'opts'.
-        if (confs.hasOwnProperty(property)) {
 
+        // If 'options' argument contains a non-supported property, don't add it to 'opts'
+        if (confs.hasOwnProperty(property)) {
             // Only add valid properties to opts
             if (Select3_isOptionValid(property, config[property])) {
                 confs[property] = config[property]
@@ -345,16 +360,11 @@ function Select3_applyConfig(config) {
         }
     }
 
-    // const resolvedOptions = resolveConflicts(options, opts)
-    // Adopt resolved options
-    // for (let property in resolvedOptions) {
-    //     opts[property] = resolvedOptions[property]
-    // }
-
     return confs
 }
 
 function Select3_isOptionValid(key, value) {
+
     let isValid = false
 
     switch (key) {
@@ -383,6 +393,10 @@ function Select3_isOptionValid(key, value) {
             typeof value === 'boolean' ? isValid = true : isValid = false
             break
 
+        case 'maximumSelectedOptions':
+            typeof value === 'number' && value > 0 ? isValid = true : isValid = false
+            break
+
         default:
             break
     }
@@ -392,17 +406,18 @@ function Select3_isOptionValid(key, value) {
 
 // Program start
 Select3('.select3.groups',{
-    search: false,
+    search: true,
     closeOnSelect: false,
-    minimumInputLength: 1,
+    minimumInputLength: 2,
     dropdownMaxHeight: 300,
+    maximumSelectedOptions: 3,
     placeholder: 'Please select an option',
 })
 
 Select3('.select3.no-close',{
-    search: false,
+    search: true,
     closeOnSelect: false,
-    minimumInputLength: 1,
+    minimumInputLength: 2,
     dropdownMaxHeight: 300,
     allowNoSelection: true,
     placeholder: 'Please select an option...',
