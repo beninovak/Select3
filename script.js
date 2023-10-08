@@ -1,131 +1,138 @@
-function Select3(selector, config) {
+console.log(document.getElementById('select3'))
+
+Element.prototype.Select3 = function(config) {
+
+    const select = this
 
     // If any options were set, apply them
     config = Select3_applyConfig(config)
-    console.table(config)
+    // console.table(config)
 
-    const elements = document.querySelectorAll(selector)
+    if (select.tagName !== 'SELECT') return false
 
-    for (let select of elements) {
+    // TODO --> Add option to format options ( add user html into option <span> )
+    // TODO --> Change forEach loops to for-of loops
+    // TODO --> 'submitFormOnSelect' option that takes an id selector of form. Submit with on 'change' event (dispatchEvent(new Event('change')))
+    // TODO --> Check multiple scenarios ( single selection with and without optgroups and multiple selection with and without optgroups etc. )
+    // TODO --> Check all other TODOs in IDE
+    // TODO --> Transfer data- attributes from original select to select3...should I really tho? Consider...
+    // TODO --> Try overriding with custom .css styles
+    // TODO --> Test on mobile
+    // TODO --> Minimize file: https://codebeautify.org/minify-js
 
-        if (select.tagName !== 'SELECT') continue
+    let select3 = document.createElement('div')
+    select3.classList.add('select3')
 
-        // TODO --> Try with form POSTs
-        // TODO --> 'tags' option - boolean
-        // TODO --> Add option to format options ( add user html into option <span> )
-        // TODO --> Change forEach loops to for-of loops
-        // TODO --> Consider adding an 'onselect' event
-        // TODO --> 'submitFormOnSelect' option that takes an id selector of form. Submit with on 'change' event (dispatchEvent(new Event('change')))
-        // TODO --> Check multiple scenarios ( single selection with and without optgroups and multiple selection with and without optgroups etc. )
-        // TODO --> Check all other TODOs in IDE
-        // TODO --> Transfer data- attributes from original select to select3...should I really tho? Consider...
-        // TODO --> Try overriding with custom .css styles
-        // TODO --> Test on mobile
-        // TODO --> Minimize file: https://codebeautify.org/minify-js
+    select3.id = select.id
 
-        let select3 = document.createElement('div')
-        select3.classList.add('select3')
-
-        select3.id = select.id
-
-        for (let cssClass of select.classList) {
-            select3.classList.add(cssClass)
-        }
-
-        // Handles closing
-        select3.addEventListener('click', (e) => {
-            const targetClasses = e.target.classList
-            if (targetClasses.contains('select3') || targetClasses.contains('selected-top') || targetClasses.contains('placeholder')) {
-                Select3_openCloseSelect3(select3, config)
-            }
-        })
-
-
-        if (select.selectedOptions.length > config.maximumSelectedOptions) {
-            config.maximumSelectedOptions = select.selectedOptions.length
-        }
-
-        if (select.multiple) {
-            select3.classList.add('multiple')
-        } else {
-            select3.classList.add('single')
-        }
-
-        let inner = document.createElement('div')
-        inner.classList.add('inner')
-
-        // Search input
-        if (config.search) {
-            let input = document.createElement('input')
-            input.classList.add('search')
-            input.setAttribute('type', 'search')
-
-            // TODO - consider this
-            if (config.placeholder !== '') {
-                input.setAttribute('placeholder', config.placeholder)
-            }
-
-            let previousSearchLength = 0
-
-            input.addEventListener('keyup', (e) => {
-
-                let searchLength = e.target.value.length
-
-                if (searchLength >= config.minimumInputLength || searchLength < previousSearchLength) {
-                    let childNodes = e.target.parentElement.querySelectorAll('span:not(.title)')
-                    Select3_filterInput(e.target.value, childNodes)
-                }
-
-                previousSearchLength = searchLength
-            })
-            inner.prepend(input)
-        }
-
-        let label = document.querySelector('label[for="' + select.id + '"]')
-
-        if (label !== null) {
-            // label.classList.add('for-select3')
-            label.addEventListener('click', () => {
-                Select3_openCloseSelect3(select3, config)
-            })
-        }
-
-        let optGroups = select.querySelectorAll('optgroup')
-        let opts = select.querySelectorAll('option')
-
-        // In case there are no optgroups, append all options to 'inner'
-        if (!optGroups.length) {
-            Select3_appendOptions(select, select3, inner, opts, select.multiple, config)
-        } else {
-            optGroups.forEach(group => {
-                let optGroupEl = document.createElement('div')
-                optGroupEl.classList.add('optgroup')
-
-                let optGroupTitle = document.createElement('span')
-                optGroupTitle.classList.add('title')
-                optGroupTitle.textContent = group.label
-
-                optGroupEl.append(optGroupTitle)
-
-                let groupOptions = group.querySelectorAll('option')
-
-                Select3_appendOptions(select, select3, optGroupEl, groupOptions,  select.multiple, config)
-
-                inner.append(optGroupEl)
-            })
-        }
-        select3.append(inner)
-
-        if (select.multiple && select.selectedOptions.length === 0 && config.placeholder !== '') {
-            let placeholder = document.createElement('span')
-            placeholder.classList.add('placeholder')
-            placeholder.textContent = config.placeholder
-            select3.prepend(placeholder)
-        }
-
-        select.style.display = 'none'
-        select.parentNode.insertBefore(select3, select.nextSibling)
+    for (let cssClass of select.classList) {
+        select3.classList.add(cssClass)
     }
+
+    // Handles closing
+    select3.addEventListener('click', (e) => {
+        const targetClasses = e.target.classList
+        if (targetClasses.contains('select3') || targetClasses.contains('selected-top') || targetClasses.contains('placeholder')) {
+            Select3_openCloseSelect3(select3, config)
+        }
+    })
+
+
+    if (select.selectedOptions.length > config.maximumSelectedOptions) {
+        config.maximumSelectedOptions = select.selectedOptions.length
+    }
+
+    if (select.multiple) {
+        select3.classList.add('multiple')
+    } else {
+        select3.classList.add('single')
+    }
+
+    let inner = document.createElement('div')
+    inner.classList.add('inner')
+
+    // Search input
+    if (config.search) {
+        let input = document.createElement('input')
+        input.classList.add('search')
+        input.setAttribute('type', 'search')
+
+        // TODO - consider this
+        if (config.placeholder !== '') {
+            input.setAttribute('placeholder', config.placeholder)
+        }
+
+        let previousSearchLength = 0
+
+        input.addEventListener('keyup', (e) => {
+
+            let searchLength = e.target.value.length
+
+            if (searchLength >= config.minimumInputLength || searchLength < previousSearchLength) {
+                let childNodes = e.target.parentElement.querySelectorAll('span:not(.title)')
+                Select3_filterInput(e.target.value, childNodes)
+            }
+
+            previousSearchLength = searchLength
+        })
+        inner.prepend(input)
+    }
+
+    let label = document.querySelector('label[for="' + select.id + '"]')
+
+    if (label !== null) {
+        // label.classList.add('for-select3')
+        label.addEventListener('click', () => {
+            Select3_openCloseSelect3(select3, config)
+        })
+    }
+
+    let optGroups = select.querySelectorAll('optgroup')
+    let opts = select.querySelectorAll('option')
+
+    // In case there are no optgroups, append all options to 'inner'
+    if (!optGroups.length) {
+        Select3_appendOptions(select, select3, inner, opts, select.multiple, config)
+    } else {
+        optGroups.forEach(group => {
+            let optGroupEl = document.createElement('div')
+            optGroupEl.classList.add('optgroup')
+
+            let optGroupTitle = document.createElement('span')
+            optGroupTitle.classList.add('title')
+            optGroupTitle.textContent = group.label
+
+            optGroupEl.append(optGroupTitle)
+
+            let groupOptions = group.querySelectorAll('option')
+
+            Select3_appendOptions(select, select3, optGroupEl, groupOptions,  select.multiple, config)
+
+            inner.append(optGroupEl)
+        })
+    }
+    select3.append(inner)
+
+    if (select.multiple && select.selectedOptions.length === 0 && config.placeholder !== '') {
+        let placeholder = document.createElement('span')
+        placeholder.classList.add('placeholder')
+        placeholder.textContent = config.placeholder
+        select3.prepend(placeholder)
+    }
+
+    select.style.display = 'none'
+    select.parentNode.insertBefore(select3, select.nextSibling)
+
+    // Appends val() function to all selects, returning array of all selected values.
+    select.val = function() {
+        let value = []
+        for (let selOpt of select.selectedOptions) {
+            value.push(selOpt.value)
+        }
+        return value
+    }
+
+    return select
 }
 
 function Select3_openCloseSelect3(select3, config) {
@@ -139,9 +146,11 @@ function Select3_openCloseSelect3(select3, config) {
         dropdown.style.maxHeight =  '0px'
     }
 
-    select3.querySelector('input.search').value = ''
-    let childNodes = select3.querySelectorAll('span:not(.title)')
-    Select3_filterInput('', childNodes)
+    if (config.search) {
+        select3.querySelector('input.search').value = ''
+        let childNodes = select3.querySelectorAll('span:not(.title)')
+        Select3_filterInput('', childNodes)
+    }
 }
 
 function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, config) {
@@ -437,7 +446,7 @@ function Select3_isOptionValid(key, value) {
 }
 
 // Program start
-Select3('.select3.groups',{
+let test = document.querySelector('.select3.groups').Select3({
     search: true,
     closeOnSelect: false,
     minimumInputLength: 2,
@@ -446,7 +455,11 @@ Select3('.select3.groups',{
     placeholder: 'Please select an option',
 })
 
-Select3('.select3.no-close',{
+test.addEventListener('change', () => {
+    console.log(test.val())
+})
+
+document.querySelector('.select3.no-close').Select3({
     search: true,
     closeOnSelect: false,
     minimumInputLength: 2,
@@ -455,16 +468,12 @@ Select3('.select3.no-close',{
     placeholder: 'Please select an option...',
 })
 
-document.querySelector('.select3.groups').addEventListener('change', () => {
-    console.log('MULTIPLE SELECT CHANGED')
-})
-
-document.querySelector('.select3.no-close').addEventListener('change', () => {
-    console.log('REGULAR SELECT CHANGED')
-})
-
-// document.querySelector('.select3.no-close').addEventListener('test_test', () => {
-//     console.log('REGULAR SELECT CUSTOM EVENT')
+// document.querySelector('button[type="submit"]').addEventListener('click', (e) => {
+//     e.preventDefault()
+//
+//     const formData = new FormData(e.target.closest('form'))
+//
+//     console.log(formData)
 // })
 
 /* Handle closing of select when clicking outside it */
