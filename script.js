@@ -16,9 +16,9 @@ function Select3(selector, config) {
         // TODO --> Change forEach loops to for-of loops
         // TODO --> Consider adding an 'onselect' event
         // TODO --> 'submitFormOnSelect' option that takes an id selector of form. Submit with on 'change' event (dispatchEvent(new Event('change')))
-        // TODO --> Check all scenarios (single selection with and without optgroups and multiple selection with and without optgroups)
+        // TODO --> Check multiple scenarios ( single selection with and without optgroups and multiple selection with and without optgroups etc. )
         // TODO --> Check all other TODOs in IDE
-        // TODO --> Transfer data- attributes from original select to select3
+        // TODO --> Transfer data- attributes from original select to select3...should I really tho? Consider...
         // TODO --> Try overriding with custom .css styles
         // TODO --> Test on mobile
         // TODO --> Minimize file: https://codebeautify.org/minify-js
@@ -61,9 +61,9 @@ function Select3(selector, config) {
             input.setAttribute('type', 'search')
 
             // TODO - consider this
-            // if (config.placeholder !== '') {
-            //     input.setAttribute('placeholder', config.placeholder)
-            // }
+            if (config.placeholder !== '') {
+                input.setAttribute('placeholder', config.placeholder)
+            }
 
             let previousSearchLength = 0
 
@@ -133,12 +133,15 @@ function Select3_openCloseSelect3(select3, config) {
     let dropdownHeight = dropdown.scrollHeight > config.dropdownMaxHeight ? config.dropdownMaxHeight : dropdown.scrollHeight
 
     select3.classList.toggle('opened')
-
     if (select3.classList.contains('opened')) {
         dropdown.style.maxHeight = dropdownHeight + 'px'
     } else {
         dropdown.style.maxHeight =  '0px'
     }
+
+    select3.querySelector('input.search').value = ''
+    let childNodes = select3.querySelectorAll('span:not(.title)')
+    Select3_filterInput('', childNodes)
 }
 
 function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, config) {
@@ -227,12 +230,11 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                     return
                 }
 
-                let selectedChildren = select3.querySelectorAll('span.selected-top')
+                let selectedOptions = select.selectedOptions
                 let isOptionAlreadySelected = false
 
-                // TODO - maybe see if option is selected by checking selectedOptions option of <select>
-                for (let child of selectedChildren) {
-                    if (child.getAttribute('data-value') === cloneEl.getAttribute('data-value')) {
+                for (let selOpt of selectedOptions) {
+                    if (selOpt.getAttribute('value') === cloneEl.getAttribute('data-value')) {
                         isOptionAlreadySelected = true
                         break
                     }
@@ -300,6 +302,8 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                 }
             }
         })
+
+        // select.dispatchEvent(new Event('test_test'))
 
         parent.append(optEl)
     }
@@ -459,7 +463,12 @@ document.querySelector('.select3.no-close').addEventListener('change', () => {
     console.log('REGULAR SELECT CHANGED')
 })
 
+// document.querySelector('.select3.no-close').addEventListener('test_test', () => {
+//     console.log('REGULAR SELECT CUSTOM EVENT')
+// })
+
 /* Handle closing of select when clicking outside it */
+/* Consider claring search input when this happens */
 // document.addEventListener('click', (e) => {
 //     let el = e.target
 //     let clickedSelect = el.closest('.select3')

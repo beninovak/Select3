@@ -101,7 +101,7 @@ div.select3.single > .selected-top {
 
 .select3 .inner input.search {
     font-size: 18px;
-    height: 24px;
+    height: 32px;
     padding: 3px;
     width: calc(100% - 20px);
     margin-inline-start: 10px;
