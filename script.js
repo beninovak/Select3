@@ -10,13 +10,16 @@ function Select3(selector, config) {
 
         if (select.tagName !== 'SELECT') continue
 
-        // TODO --> Add 'maxShownTags' option for multiple selects
-        // TODO --> Add placeholder
-        // TODO --> Add some sort of option to allow empty selection ( needed for deciding when to show the placeholder as well )
         // TODO --> Try with form POSTs
+        // TODO --> 'tags' option - boolean
+        // TODO --> Add option to format options ( add user html into option <span> )
+        // TODO --> Change forEach loops to for-of loops
+        // TODO --> Consider adding an 'onselect' event
         // TODO --> 'submitFormOnSelect' option that takes an id selector of form. Submit with on 'change' event (dispatchEvent(new Event('change')))
         // TODO --> Check all scenarios (single selection with and without optgroups and multiple selection with and without optgroups)
-        // TODO --> Check all other TODOs
+        // TODO --> Check all other TODOs in IDE
+        // TODO --> Transfer data- attributes from original select to select3
+        // TODO --> Try overriding with custom .css styles
         // TODO --> Test on mobile
         // TODO --> Minimize file: https://codebeautify.org/minify-js
 
@@ -31,22 +34,16 @@ function Select3(selector, config) {
 
         // Handles closing
         select3.addEventListener('click', (e) => {
-            if (select.multiple && (e.target.classList.contains('select3') || e.target.classList.contains('selected-top'))) {
-                Select3_openCloseSelect3(select3, config)
-            } else if (!select.multiple && e.target.classList.contains('selected-top')) {
+            const targetClasses = e.target.classList
+            if (targetClasses.contains('select3') || targetClasses.contains('selected-top') || targetClasses.contains('placeholder')) {
                 Select3_openCloseSelect3(select3, config)
             }
-            // else if (e.target.classList.contains('placeholder')) {
-            //     Select3_openCloseSelect3(select3, config)
-            // }
         })
 
 
         if (select.selectedOptions.length > config.maximumSelectedOptions) {
             config.maximumSelectedOptions = select.selectedOptions.length
         }
-        console.table(config)
-
 
         if (select.multiple) {
             select3.classList.add('multiple')
@@ -62,6 +59,11 @@ function Select3(selector, config) {
             let input = document.createElement('input')
             input.classList.add('search')
             input.setAttribute('type', 'search')
+
+            // TODO - consider this
+            // if (config.placeholder !== '') {
+            //     input.setAttribute('placeholder', config.placeholder)
+            // }
 
             let previousSearchLength = 0
 
@@ -82,7 +84,7 @@ function Select3(selector, config) {
         let label = document.querySelector('label[for="' + select.id + '"]')
 
         if (label !== null) {
-            label.classList.add('for-select3')
+            // label.classList.add('for-select3')
             label.addEventListener('click', () => {
                 Select3_openCloseSelect3(select3, config)
             })
@@ -114,23 +116,12 @@ function Select3(selector, config) {
         }
         select3.append(inner)
 
-
-        // Adds placeholder, but only if a null selection is permitted
-        // if (config.allowNoSelection && config.placeholder.length > 0) {
-        //     let placeholder = document.createElement('span')
-        //     placeholder.classList.add('placeholder')
-        //     placeholder.textContent = config.placeholder
-        //     select3.prepend(placeholder)
-        //
-        //     // Check if placeholder should be shown based on whether the only selected option is-
-        //     // an option with value="".
-        //     if (select.selectedOptions.length === 1 && select.selectedOptions[0].value === '') {
-        //         select3.querySelector('span.placeholder').style.display = 'block'
-        //         select3.querySelectorAll('span.selected-top').forEach(opt => {
-        //             opt.style.display = 'none'
-        //         })
-        //     }
-        // }
+        if (select.multiple && select.selectedOptions.length === 0 && config.placeholder !== '') {
+            let placeholder = document.createElement('span')
+            placeholder.classList.add('placeholder')
+            placeholder.textContent = config.placeholder
+            select3.prepend(placeholder)
+        }
 
         select.style.display = 'none'
         select.parentNode.insertBefore(select3, select.nextSibling)
@@ -151,7 +142,6 @@ function Select3_openCloseSelect3(select3, config) {
 }
 
 function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, config) {
-    // let anyOptionSelected = false
 
     for (let opt of opts) {
         let optEl = document.createElement('span')
@@ -189,6 +179,12 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                 })
 
                 clone.prepend(closeBtn)
+            } else {
+                // If first option is empty, make it a placeholder
+                if (config.placeholder !== '' && select[0] === opt && opt.textContent === '') {
+                    clone.classList.add('placeholder')
+                    clone.textContent = config.placeholder
+                }
             }
 
             select3.append(clone)
@@ -209,6 +205,12 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
             optEl.classList.add('disabled')
         }
 
+        // Placeholder option for regular select
+        if (!isMultipleSelect && config.placeholder !== '' && select[0] === opt && opt.textContent === '') {
+            optEl.classList.add('placeholder')
+            optEl.textContent = config.placeholder
+        }
+
         optEl.addEventListener('click', (e) => {
 
             let el = e.target
@@ -220,34 +222,65 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
             // Can only do stuff if the option in the original select is not disabled
             if (!opt.disabled) {
 
-                if (select.selectedOptions.length >= config.maximumSelectedOptions) {
-
-                    let value = e.target.dataset.value
-                    let tag = select3.querySelector(':scope > span[data-value="' + value + '"]')
-
-                    Select3_removeOption(select, select3, e.target, false) // Deselect option
-
-                    if (tag !== null) {
-                        Select3_removeOption(select, select3, tag, true) // Remove tag
-                    }
+                // If user selects an option, whilst already having max selected options
+                if (select.selectedOptions.length >= config.maximumSelectedOptions && optEl.getAttribute('data-selected') === '0') {
                     return
                 }
 
-                // Set behaviour depending on if the select is multiple choice or not
-                if (!isMultipleSelect) {
+                let selectedChildren = select3.querySelectorAll('span.selected-top')
+                let isOptionAlreadySelected = false
+
+                // TODO - maybe see if option is selected by checking selectedOptions option of <select>
+                for (let child of selectedChildren) {
+                    if (child.getAttribute('data-value') === cloneEl.getAttribute('data-value')) {
+                        isOptionAlreadySelected = true
+                        break
+                    }
+                }
+
+                // Handle selecting/deselecting
+                if (!isMultipleSelect && !isOptionAlreadySelected) {
+                    select.querySelectorAll('option').forEach(child => {
+                        child.removeAttribute('selected')
+                    })
+
                     select3.querySelectorAll('.inner span').forEach(child => {
                         child.classList.remove('selected')
                         child.setAttribute('data-selected', '0')
                     })
+
+                    opt.setAttribute('selected', 'selected')
+                    select3.querySelector('.selected-top').replaceWith(cloneEl)
                     optEl.classList.add('selected')
                     optEl.setAttribute('data-selected', '1')
-                } else {
-                    if (optEl.getAttribute('data-selected') === '1') {
+
+                    // Trigger 'change' event only on regular select only if option is not already selected.
+                    select.dispatchEvent(new Event('change'))
+
+                } else if (isMultipleSelect) {
+
+                    if (isOptionAlreadySelected) {
+                        select3.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]').remove()
+                        opt.removeAttribute('selected')
                         optEl.classList.remove('selected')
                         optEl.setAttribute('data-selected', '0')
-                    } else if (optEl.getAttribute('data-selected') === '0') {
+
+                        if (select.selectedOptions.length === 0 && config.placeholder !== '') {
+                            let placeholder = document.createElement('span')
+                            placeholder.classList.add('placeholder')
+                            placeholder.textContent = config.placeholder
+                            select3.prepend(placeholder)
+                        }
+                    } else {
+                        select3.insertBefore(cloneEl, select3.querySelector('.inner'))
+                        opt.setAttribute('selected', 'selected')
                         optEl.classList.add('selected')
                         optEl.setAttribute('data-selected', '1')
+
+                        // Only happens if the option that was just clicked was the first selected option.
+                        if (select.selectedOptions.length === 1) {
+                            select3.querySelector(':scope > span.placeholder').remove()
+                        }
                     }
 
                     let closeBtn = document.createElement('b')
@@ -258,30 +291,8 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                     closeBtn.addEventListener('click', (e) => {
                         Select3_removeOption(select, select3, e.target.parentElement, true)
                     })
-                }
 
-                let selectedChildren = select3.childNodes
-                let isOptionAlreadySelected = false
-
-                for (let child of selectedChildren) {
-                    if (child.getAttribute('data-value') === cloneEl.getAttribute('data-value')) {
-                        isOptionAlreadySelected = true
-                        break
-                    }
-                }
-
-                if (!isOptionAlreadySelected) {
-                    if (isMultipleSelect) {
-                        select3.insertBefore(cloneEl, select3.querySelector('.inner'))
-                        opt.setAttribute('selected', 'selected')
-                    } else {
-                        select3.querySelector('.selected-top').replaceWith(cloneEl)
-                    }
-                } else {
-                    if (isMultipleSelect) {
-                        select3.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]').remove()
-                        opt.removeAttribute('selected')
-                    }
+                    select.dispatchEvent(new Event('change'))
                 }
 
                 if (config.closeOnSelect) {
@@ -295,8 +306,8 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
 }
 
 function Select3_removeOption(select, select3, option, removeOption) {
-    let value = option.getAttribute('data-value')
 
+    let value = option.getAttribute('data-value')
     let selectOption = select.querySelector('option[value="' + value + '"]')
 
     selectOption.removeAttribute('selected')
@@ -305,9 +316,13 @@ function Select3_removeOption(select, select3, option, removeOption) {
     select3Option.classList.remove('selected')
     select3Option.setAttribute('data-selected', '0')
 
+    // TODO - review if removeOption is even needed...
     if (removeOption) {
         option.remove()
     }
+
+    // Needed because anytime an option is deselected by clicking on the 'x' in the tags, the <select>'s value is updated.
+    select.dispatchEvent(new Event('change'))
 }
 
 function Select3_filterInput(filter, options) {
@@ -351,8 +366,9 @@ function Select3_applyConfig(config) {
         minimumInputLength: 3,
         placeholder: '',
         dropdownMaxHeight: 300,
-        maximumSelectedOptions: 10000,
+        maximumSelectedOptions: 100,
         // allowNoSelection: false,
+        submitFormOnChange: ''
     }
 
     for (let property in config) {
@@ -388,19 +404,25 @@ function Select3_isOptionValid(key, value) {
             break
 
         case 'placeholder':
-            typeof value === 'string' ? isValid = true : isValid = false
+            // Does check for length of placeholder less than 1000 make sense? I think so...TODO --> review
+            typeof value === 'string' && value.length > 0 && value.length < 1000 ? isValid = true : isValid = false
             break
 
         case 'dropdownMaxHeight':
             typeof value === 'number' && value > 0 ? isValid = true : isValid = false
             break
 
-        case 'allowNoSelection':
-            typeof value === 'boolean' ? isValid = true : isValid = false
-            break
+        // case 'allowNoSelection':
+        //     typeof value === 'boolean' ? isValid = true : isValid = false
+        //     break
 
         case 'maximumSelectedOptions':
             typeof value === 'number' && value > 0 ? isValid = true : isValid = false
+            break
+
+        case 'submitFormOnChange':
+            // Does check for length of selector less than 1000 make sense? I think so...TODO --> review
+            typeof value === 'string' && value.length > 0 && value.length < 1000 ? isValid = true : isValid = false
             break
 
         default:
@@ -427,6 +449,14 @@ Select3('.select3.no-close',{
     dropdownMaxHeight: 300,
     allowNoSelection: true,
     placeholder: 'Please select an option...',
+})
+
+document.querySelector('.select3.groups').addEventListener('change', () => {
+    console.log('MULTIPLE SELECT CHANGED')
+})
+
+document.querySelector('.select3.no-close').addEventListener('change', () => {
+    console.log('REGULAR SELECT CHANGED')
 })
 
 /* Handle closing of select when clicking outside it */
