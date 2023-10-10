@@ -2,20 +2,21 @@ console.log(document.getElementById('select3'))
 
 Element.prototype.Select3 = function(config) {
 
+    // if (config.formatOptionsFunction !== null) {
+    //      config.formatOptionsFunction()
+    // }
+
     const select = this
 
     // If any options were set, apply them
     config = Select3_applyConfig(config)
-    // console.table(config)
+    console.table(config)
 
     if (select.tagName !== 'SELECT') return false
 
-    // TODO --> Add option to format options ( add user html into option <span> )
-    // TODO --> Change forEach loops to for-of loops
-    // TODO --> 'submitFormOnSelect' option that takes an id selector of form. Submit with on 'change' event (dispatchEvent(new Event('change')))
     // TODO --> Check multiple scenarios ( single selection with and without optgroups and multiple selection with and without optgroups etc. )
     // TODO --> Check all other TODOs in IDE
-    // TODO --> Transfer data- attributes from original select to select3...should I really tho? Consider...
+    // TODO --> Transfer data- attributes from original select to select3...should I really tho? Consider...maybe needed for formatOption?
     // TODO --> Try overriding with custom .css styles
     // TODO --> Test on mobile
     // TODO --> Minimize file: https://codebeautify.org/minify-js
@@ -27,6 +28,14 @@ Element.prototype.Select3 = function(config) {
 
     for (let cssClass of select.classList) {
         select3.classList.add(cssClass)
+    }
+
+    if (config.customClasses.length > 1) {
+
+        for (let cssClass of config.customClasses) {
+            if (typeof cssClass !== 'string') continue
+            select3.classList.add(cssClass)
+        }
     }
 
     // Handles closing
@@ -94,7 +103,7 @@ Element.prototype.Select3 = function(config) {
     if (!optGroups.length) {
         Select3_appendOptions(select, select3, inner, opts, select.multiple, config)
     } else {
-        optGroups.forEach(group => {
+        for (let group of optGroups) {
             let optGroupEl = document.createElement('div')
             optGroupEl.classList.add('optgroup')
 
@@ -109,7 +118,7 @@ Element.prototype.Select3 = function(config) {
             Select3_appendOptions(select, select3, optGroupEl, groupOptions,  select.multiple, config)
 
             inner.append(optGroupEl)
-        })
+        }
     }
     select3.append(inner)
 
@@ -173,10 +182,15 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
             let clone = optEl.cloneNode()
             clone.classList.add('selected-top')
 
-            if (opt.label.length) {
-                clone.textContent = opt.label
+            // Format option if special formatting exists, else just fill option with text
+            if (config.formatOptionsFunction !== null) {
+                clone.innerHTML = config.formatOptionsFunction(opt)
             } else {
-                clone.textContent = opt.text
+                if (opt.label.length) {
+                    clone.textContent = opt.label
+                } else {
+                    clone.textContent = opt.text
+                }
             }
 
             if (isMultipleSelect) {
@@ -207,10 +221,15 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
             optEl.setAttribute('data-selected', '0')
         }
 
-        if (opt.label.length) {
-            optEl.textContent = opt.label
+        // Format option if special formatting exists, else just fill option with text
+        if (config.formatOptionsFunction !== null) {
+             optEl.innerHTML = config.formatOptionsFunction(opt)
         } else {
-            optEl.textContent = opt.text
+            if (opt.label.length) {
+                optEl.textContent = opt.label
+            } else {
+                optEl.textContent = opt.text
+            }
         }
 
         if (opt.disabled) {
@@ -228,7 +247,9 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
             let el = e.target
             let cloneEl = el.cloneNode()
 
-            cloneEl.textContent = el.textContent
+            // cloneEl.textContent = el.textContent
+            // cloneEl.classList.add('selected-top')
+            cloneEl.innerHTML = el.innerHTML
             cloneEl.classList.add('selected-top')
 
             // Can only do stuff if the option in the original select is not disabled
@@ -251,14 +272,19 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
 
                 // Handle selecting/deselecting
                 if (!isMultipleSelect && !isOptionAlreadySelected) {
-                    select.querySelectorAll('option').forEach(child => {
-                        child.removeAttribute('selected')
-                    })
 
-                    select3.querySelectorAll('.inner span').forEach(child => {
+                    let children = select.querySelectorAll('option')
+
+                    for (let child of children) {
+                        child.removeAttribute('selected')
+                    }
+
+                    children = select3.querySelectorAll('.inner span')
+
+                    for (let child of children) {
                         child.classList.remove('selected')
                         child.setAttribute('data-selected', '0')
-                    })
+                    }
 
                     opt.setAttribute('selected', 'selected')
                     select3.querySelector('.selected-top').replaceWith(cloneEl)
@@ -380,8 +406,9 @@ function Select3_applyConfig(config) {
         placeholder: '',
         dropdownMaxHeight: 300,
         maximumSelectedOptions: 100,
-        // allowNoSelection: false,
-        submitFormOnChange: ''
+        customClasses: [],
+        submitFormOnChange: '',
+        formatOptionsFunction: null,
     }
 
     for (let property in config) {
@@ -425,10 +452,6 @@ function Select3_isOptionValid(key, value) {
             typeof value === 'number' && value > 0 ? isValid = true : isValid = false
             break
 
-        // case 'allowNoSelection':
-        //     typeof value === 'boolean' ? isValid = true : isValid = false
-        //     break
-
         case 'maximumSelectedOptions':
             typeof value === 'number' && value > 0 ? isValid = true : isValid = false
             break
@@ -436,6 +459,15 @@ function Select3_isOptionValid(key, value) {
         case 'submitFormOnChange':
             // Does check for length of selector less than 1000 make sense? I think so...TODO --> review
             typeof value === 'string' && value.length > 0 && value.length < 1000 ? isValid = true : isValid = false
+            break
+
+        case 'formatOptionsFunction':
+            // TODO consider if more checking is needed aside from determining if value is a function
+            typeof value === 'function' ? isValid = true : isValid = false
+            break
+
+        case 'customClasses':
+            Array.isArray(value) && value.length > 0 ? isValid = true : isValid = false
             break
 
         default:
@@ -464,8 +496,10 @@ document.querySelector('.select3.no-close').Select3({
     closeOnSelect: false,
     minimumInputLength: 2,
     dropdownMaxHeight: 300,
+    customClasses: ['images', 'test123'],
     allowNoSelection: true,
     placeholder: 'Please select an option...',
+    formatOptionsFunction: formatOptions,
 })
 
 // document.querySelector('button[type="submit"]').addEventListener('click', (e) => {
@@ -506,3 +540,21 @@ document.querySelector('.select3.no-close').Select3({
 //     const formData = new FormData(e.target.closest('form'))
 //     console.log(formData)
 // })
+
+
+// TODO temp function - remove later
+function formatOptions(option) {
+
+    if (!option.value) {
+        return option.textContent;
+    }
+
+    let content = document.createElement('span')
+    let image = document.createElement('img')
+
+    image.src = option.dataset.imgSrc
+    content.append(image)
+    content.append(option.textContent)
+
+    return content.innerHTML;
+}

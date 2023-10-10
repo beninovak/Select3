@@ -225,3 +225,24 @@ div.select3.single > .selected-top {
     line-height: 12px;
 }
 /* Multiple select end */
+
+
+/* TODO - remove later */
+/* TEST CSS FOR formatOption */
+div.select3.images > .selected-top,
+.select3 .inner span:not(.placeholder) {
+    position: relative;
+    padding-left: 60px;
+}
+
+div.select3.images > .selected-top img,
+.select3 .inner span > img {
+    position: absolute;
+    top: 5px;
+    left: 15px;
+    width: 30px;
+    height: 30px;
+    margin-right: 15px;
+    object-fit: contain;
+}
+/* TEST CSS FOR formatOption end */
