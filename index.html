@@ -18,8 +18,8 @@
             <!--<option value="zero"></option>-->
             <optgroup label="optgroup 1">
                 <option value="banana">Banana</option>
-                <option selected value="apple">Apple</option>
-                <option selected value="pomegranate">Pomegranate</option>
+                <option value="apple">Apple</option>
+                <option value="pomegranate">Pomegranate</option>
                 <option value="lidl">Lidl</option>
                 <option value="ledl">Ledl</option>
             </optgroup>
@@ -38,13 +38,17 @@
     <form id="test-form2" method="get">
         <label for="basic-select">Custom select 2</label>
         <select data-test="123" id="basic-select" class="select3 no-close" name="no-optgroups">
-            <option data-img-src="test/dick.png" value=""></option>
-<!--            <option value=""></option>-->
-            <option data-img-src="test/pussy.png" value="pussy">Pussy</option>
-            <option selected="selected" data-img-src="test/tree.png" value="tree">Tree</option>
-            <option data-img-src="test/user.png" disabled value="user">User</option>
-            <option data-img-src="test/wrench.png" value="four" label="wrench">Wrench</option>
-            <option data-img-src="test/dick.png" value="cock">Cock</option>
+            <option value=""></option>
+            <optgroup label="test">
+    <!--            <option value=""></option>-->
+                <option data-img-src="test/cart.png" value="cart">Cart</option>
+                <option data-img-src="test/tree.png" value="tree">Tree</option>
+                <option data-img-src="test/user.png" disabled value="user">User</option>
+            </optgroup>
+            <optgroup label="optgroup 2">
+                <option data-img-src="test/search.png" value="search">Search</option>
+                <option data-img-src="test/globe.png" value="globe">Globe</option>
+            </optgroup>
         </select>
         <br/>
         <button type="submit">Submit form</button>

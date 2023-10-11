@@ -1,51 +1,32 @@
-console.log(document.getElementById('select3'))
-
 Element.prototype.Select3 = function(config) {
 
-    // if (config.formatOptionsFunction !== null) {
-    //      config.formatOptionsFunction()
-    // }
-
     const select = this
+    if (select.tagName !== 'SELECT') return false
 
     // If any options were set, apply them
     config = Select3_applyConfig(config)
-    console.table(config)
 
-    if (select.tagName !== 'SELECT') return false
-
+    // TODO --> When searching add a 'no results' thing if nothing was found
     // TODO --> Check multiple scenarios ( single selection with and without optgroups and multiple selection with and without optgroups etc. )
     // TODO --> Check all other TODOs in IDE
-    // TODO --> Transfer data- attributes from original select to select3...should I really tho? Consider...maybe needed for formatOption?
     // TODO --> Try overriding with custom .css styles
-    // TODO --> Test on mobile
+    // TODO --> Test on mobile - github page
     // TODO --> Minimize file: https://codebeautify.org/minify-js
 
     let select3 = document.createElement('div')
     select3.classList.add('select3')
 
-    select3.id = select.id
-
     for (let cssClass of select.classList) {
         select3.classList.add(cssClass)
     }
 
-    if (config.customClasses.length > 1) {
-
-        for (let cssClass of config.customClasses) {
-            if (typeof cssClass !== 'string') continue
-            select3.classList.add(cssClass)
-        }
-    }
-
     // Handles closing
     select3.addEventListener('click', (e) => {
-        const targetClasses = e.target.classList
-        if (targetClasses.contains('select3') || targetClasses.contains('selected-top') || targetClasses.contains('placeholder')) {
+        const classes = e.target.classList
+        if (classes.contains('select3') || classes.contains('selected-top') || classes.contains('placeholder')) {
             Select3_openCloseSelect3(select3, config)
         }
     })
-
 
     if (select.selectedOptions.length > config.maximumSelectedOptions) {
         config.maximumSelectedOptions = select.selectedOptions.length
@@ -66,29 +47,20 @@ Element.prototype.Select3 = function(config) {
         input.classList.add('search')
         input.setAttribute('type', 'search')
 
-        // TODO - consider this
-        if (config.placeholder !== '') {
-            input.setAttribute('placeholder', config.placeholder)
-        }
-
         let previousSearchLength = 0
 
         input.addEventListener('keyup', (e) => {
-
             let searchLength = e.target.value.length
-
             if (searchLength >= config.minimumInputLength || searchLength < previousSearchLength) {
                 let childNodes = e.target.parentElement.querySelectorAll('span:not(.title)')
                 Select3_filterInput(e.target.value, childNodes)
             }
-
             previousSearchLength = searchLength
         })
         inner.prepend(input)
     }
 
     let label = document.querySelector('label[for="' + select.id + '"]')
-
     if (label !== null) {
         // label.classList.add('for-select3')
         label.addEventListener('click', () => {
@@ -122,7 +94,10 @@ Element.prototype.Select3 = function(config) {
     }
     select3.append(inner)
 
-    if (select.multiple && select.selectedOptions.length === 0 && config.placeholder !== '') {
+    if (
+        (select.multiple && select.selectedOptions.length === 0 && config.placeholder !== '') ||
+        (!select.multiple && select[0].value === '' && select[0].textContent === '' && config.placeholder !== '')
+    ) {
         let placeholder = document.createElement('span')
         placeholder.classList.add('placeholder')
         placeholder.textContent = config.placeholder
@@ -132,13 +107,12 @@ Element.prototype.Select3 = function(config) {
     select.style.display = 'none'
     select.parentNode.insertBefore(select3, select.nextSibling)
 
-    // Appends val() function to all selects, returning array of all selected values.
     select.val = function() {
         let value = []
         for (let selOpt of select.selectedOptions) {
             value.push(selOpt.value)
         }
-        return value
+        return select.multiple ? value : value[0]
     }
 
     return select
@@ -198,19 +172,10 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                 let closeBtn = document.createElement('b')
                 closeBtn.classList.add('remove')
                 closeBtn.textContent = '×'
-
-                // Enable deselection option in multiple select by clicking on the 'X' in the tag
                 closeBtn.addEventListener('click', (e) => {
-                    Select3_removeOption(select, select3, e.target.parentElement, true)
+                    Select3_removeOption(select, select3, e.target.parentElement)
                 })
-
                 clone.prepend(closeBtn)
-            } else {
-                // If first option is empty, make it a placeholder
-                if (config.placeholder !== '' && select[0] === opt && opt.textContent === '') {
-                    clone.classList.add('placeholder')
-                    clone.textContent = config.placeholder
-                }
             }
 
             select3.append(clone)
@@ -236,19 +201,11 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
             optEl.classList.add('disabled')
         }
 
-        // Placeholder option for regular select
-        if (!isMultipleSelect && config.placeholder !== '' && select[0] === opt && opt.textContent === '') {
-            optEl.classList.add('placeholder')
-            optEl.textContent = config.placeholder
-        }
-
         optEl.addEventListener('click', (e) => {
 
             let el = e.target
             let cloneEl = el.cloneNode()
 
-            // cloneEl.textContent = el.textContent
-            // cloneEl.classList.add('selected-top')
             cloneEl.innerHTML = el.innerHTML
             cloneEl.classList.add('selected-top')
 
@@ -260,38 +217,34 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                     return
                 }
 
-                let selectedOptions = select.selectedOptions
                 let isOptionAlreadySelected = false
-
-                for (let selOpt of selectedOptions) {
-                    if (selOpt.getAttribute('value') === cloneEl.getAttribute('data-value')) {
-                        isOptionAlreadySelected = true
-                        break
-                    }
+                if (
+                    (!isMultipleSelect && select.val() === cloneEl.getAttribute('data-value')) ||
+                    (isMultipleSelect && select.val().includes(cloneEl.getAttribute('data-value')))
+                ) {
+                    isOptionAlreadySelected = true
                 }
 
                 // Handle selecting/deselecting
                 if (!isMultipleSelect && !isOptionAlreadySelected) {
 
                     let children = select.querySelectorAll('option')
-
                     for (let child of children) {
                         child.removeAttribute('selected')
                     }
 
-                    children = select3.querySelectorAll('.inner span')
-
-                    for (let child of children) {
+                    let select3Children = select3.querySelectorAll('.inner span')
+                    for (let child of select3Children) {
                         child.classList.remove('selected')
                         child.setAttribute('data-selected', '0')
                     }
 
                     opt.setAttribute('selected', 'selected')
-                    select3.querySelector('.selected-top').replaceWith(cloneEl)
+                    select3.querySelector('.selected-top, .placeholder').replaceWith(cloneEl)
                     optEl.classList.add('selected')
                     optEl.setAttribute('data-selected', '1')
 
-                    // Trigger 'change' event only on regular select only if option is not already selected.
+                    // Trigger 'change' event on regular select only if option is not already selected.
                     select.dispatchEvent(new Event('change'))
 
                 } else if (isMultipleSelect) {
@@ -323,11 +276,10 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                     let closeBtn = document.createElement('b')
                     closeBtn.classList.add('remove')
                     closeBtn.textContent = '×'
-                    cloneEl.prepend(closeBtn)
-
                     closeBtn.addEventListener('click', (e) => {
-                        Select3_removeOption(select, select3, e.target.parentElement, true)
+                        Select3_removeOption(select, select3, e.target.parentElement)
                     })
+                    cloneEl.prepend(closeBtn)
 
                     select.dispatchEvent(new Event('change'))
                 }
@@ -338,13 +290,11 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
             }
         })
 
-        // select.dispatchEvent(new Event('test_test'))
-
         parent.append(optEl)
     }
 }
 
-function Select3_removeOption(select, select3, option, removeOption) {
+function Select3_removeOption(select, select3, option) {
 
     let value = option.getAttribute('data-value')
     let selectOption = select.querySelector('option[value="' + value + '"]')
@@ -355,10 +305,7 @@ function Select3_removeOption(select, select3, option, removeOption) {
     select3Option.classList.remove('selected')
     select3Option.setAttribute('data-selected', '0')
 
-    // TODO - review if removeOption is even needed...
-    if (removeOption) {
-        option.remove()
-    }
+    option.remove()
 
     // Needed because anytime an option is deselected by clicking on the 'x' in the tags, the <select>'s value is updated.
     select.dispatchEvent(new Event('change'))
@@ -406,8 +353,6 @@ function Select3_applyConfig(config) {
         placeholder: '',
         dropdownMaxHeight: 300,
         maximumSelectedOptions: 100,
-        customClasses: [],
-        submitFormOnChange: '',
         formatOptionsFunction: null,
     }
 
@@ -426,59 +371,32 @@ function Select3_applyConfig(config) {
 }
 
 function Select3_isOptionValid(key, value) {
-
-    let isValid = false
-
     switch (key) {
-
         case 'closeOnSelect':
-            typeof value === 'boolean' ? isValid = true : isValid = false
-            break
+            return typeof value === 'boolean'
 
         case 'search':
-            typeof value === 'boolean' ? isValid = true : isValid = false
-            break
+            return typeof value === 'boolean'
 
         case 'minimumInputLength':
-            typeof value === 'number' && value > 0 ? isValid = true : isValid = false
-            break
+            return typeof value === 'number' && value > 0
 
         case 'placeholder':
-            // Does check for length of placeholder less than 1000 make sense? I think so...TODO --> review
-            typeof value === 'string' && value.length > 0 && value.length < 1000 ? isValid = true : isValid = false
-            break
+            return typeof value === 'string' && value.length > 0 && value.length < 200
 
         case 'dropdownMaxHeight':
-            typeof value === 'number' && value > 0 ? isValid = true : isValid = false
-            break
+            return typeof value === 'number' && value > 0
 
         case 'maximumSelectedOptions':
-            typeof value === 'number' && value > 0 ? isValid = true : isValid = false
-            break
-
-        case 'submitFormOnChange':
-            // Does check for length of selector less than 1000 make sense? I think so...TODO --> review
-            typeof value === 'string' && value.length > 0 && value.length < 1000 ? isValid = true : isValid = false
-            break
+            return typeof value === 'number' && value > 0
 
         case 'formatOptionsFunction':
-            // TODO consider if more checking is needed aside from determining if value is a function
-            typeof value === 'function' ? isValid = true : isValid = false
-            break
-
-        case 'customClasses':
-            Array.isArray(value) && value.length > 0 ? isValid = true : isValid = false
-            break
-
-        default:
-            break
+            return typeof value === 'function'
     }
-
-    return isValid
 }
 
 // Program start
-let test = document.querySelector('.select3.groups').Select3({
+let test2 = document.querySelector('.select3.groups').Select3({
     search: true,
     closeOnSelect: false,
     minimumInputLength: 2,
@@ -486,32 +404,22 @@ let test = document.querySelector('.select3.groups').Select3({
     maximumSelectedOptions: 4,
     placeholder: 'Please select an option',
 })
-
+test2.addEventListener('change', () => {
+    console.log(test2.val())
+})
+let test = document.querySelector('.select3.no-close').Select3({
+    search: true,
+    closeOnSelect: true,
+    minimumInputLength: 2,
+    dropdownMaxHeight: 300,
+    allowNoSelection: true,
+    placeholder: 'Please select an option...',
+})
 test.addEventListener('change', () => {
     console.log(test.val())
 })
-
-document.querySelector('.select3.no-close').Select3({
-    search: true,
-    closeOnSelect: false,
-    minimumInputLength: 2,
-    dropdownMaxHeight: 300,
-    customClasses: ['images', 'test123'],
-    allowNoSelection: true,
-    placeholder: 'Please select an option...',
-    formatOptionsFunction: formatOptions,
-})
-
-// document.querySelector('button[type="submit"]').addEventListener('click', (e) => {
-//     e.preventDefault()
-//
-//     const formData = new FormData(e.target.closest('form'))
-//
-//     console.log(formData)
-// })
-
 /* Handle closing of select when clicking outside it */
-/* Consider claring search input when this happens */
+/* Consider clearing search input when this happens */
 // document.addEventListener('click', (e) => {
 //     let el = e.target
 //     let clickedSelect = el.closest('.select3')
@@ -534,27 +442,3 @@ document.querySelector('.select3.no-close').Select3({
 //         })
 //     }
 // })
-
-// document.querySelector('button').addEventListener('click', (e) => {
-//     e.preventDefault()
-//     const formData = new FormData(e.target.closest('form'))
-//     console.log(formData)
-// })
-
-
-// TODO temp function - remove later
-function formatOptions(option) {
-
-    if (!option.value) {
-        return option.textContent;
-    }
-
-    let content = document.createElement('span')
-    let image = document.createElement('img')
-
-    image.src = option.dataset.imgSrc
-    content.append(image)
-    content.append(option.textContent)
-
-    return content.innerHTML;
-}
