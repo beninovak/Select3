@@ -6,6 +6,7 @@ Element.prototype.Select3 = function(config) {
     // If any options were set, apply them
     config = Select3_applyConfig(config)
 
+    // TODO --> Search input sticky??
     // TODO --> When searching add a 'no results' thing if nothing was found
     // TODO --> Check multiple scenarios ( single selection with and without optgroups and multiple selection with and without optgroups etc. )
     // TODO --> Check all other TODOs in IDE
@@ -52,8 +53,8 @@ Element.prototype.Select3 = function(config) {
         input.addEventListener('keyup', (e) => {
             let searchLength = e.target.value.length
             if (searchLength >= config.minimumInputLength || searchLength < previousSearchLength) {
-                let childNodes = e.target.parentElement.querySelectorAll('span:not(.title)')
-                Select3_filterInput(e.target.value, childNodes)
+                let childNodes = e.target.parentElement.querySelectorAll('span:not(.title, .no-results)')
+                Select3_filterInput(e.target.value, childNodes, select, inner)
             }
             previousSearchLength = searchLength
         })
@@ -68,30 +69,28 @@ Element.prototype.Select3 = function(config) {
         })
     }
 
-    let optGroups = select.querySelectorAll('optgroup')
-    let opts = select.querySelectorAll('option')
+    for (let child of select.children) {
 
-    // In case there are no optgroups, append all options to 'inner'
-    if (!optGroups.length) {
-        Select3_appendOptions(select, select3, inner, opts, select.multiple, config)
-    } else {
-        for (let group of optGroups) {
+        if (child.tagName === 'OPTION') {
+            Select3_appendOptions(select, select3, inner, child, select.multiple, config)
+        } else if (child.tagName === 'OPTGROUP') {
+
             let optGroupEl = document.createElement('div')
             optGroupEl.classList.add('optgroup')
 
             let optGroupTitle = document.createElement('span')
             optGroupTitle.classList.add('title')
-            optGroupTitle.textContent = group.label
+            optGroupTitle.textContent = child.label
 
             optGroupEl.append(optGroupTitle)
 
-            let groupOptions = group.querySelectorAll('option')
-
-            Select3_appendOptions(select, select3, optGroupEl, groupOptions,  select.multiple, config)
-
+            for (let opt of child.children) {
+                Select3_appendOptions(select, select3, optGroupEl, opt, select.multiple, config)
+            }
             inner.append(optGroupEl)
         }
     }
+
     select3.append(inner)
 
     if (
@@ -101,6 +100,9 @@ Element.prototype.Select3 = function(config) {
         let placeholder = document.createElement('span')
         placeholder.classList.add('placeholder')
         placeholder.textContent = config.placeholder
+
+        select3.querySelector('span.selected-top')?.remove()
+
         select3.prepend(placeholder)
     }
 
@@ -131,43 +133,148 @@ function Select3_openCloseSelect3(select3, config) {
 
     if (config.search) {
         select3.querySelector('input.search').value = ''
-        let childNodes = select3.querySelectorAll('span:not(.title)')
-        Select3_filterInput('', childNodes)
+        select3.querySelector('.no-results')?.remove()
+        // Show all options again
+        for (let opt of select3.querySelectorAll('.option-hidden')) {
+            opt.classList.remove('option-hidden')
+        }
     }
 }
 
-function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, config) {
+function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, config) {
 
-    for (let opt of opts) {
-        let optEl = document.createElement('span')
-        optEl.setAttribute('data-value', opt.value.toString())
+    let optEl = document.createElement('span')
+    optEl.setAttribute('data-value', opt.value.toString())
 
-        // Transfer data- attributes
-        if (Object.keys(opt.dataset).length) {
-            let optDataSet = opt.dataset
-            for (const property in optDataSet) {
-                optEl.setAttribute('data-' + property, optDataSet[property])
+    // Transfer data- attributes
+    if (Object.keys(opt.dataset).length) {
+        let optDataSet = opt.dataset
+        for (const property in optDataSet) {
+            optEl.setAttribute('data-' + property, optDataSet[property])
+        }
+    }
+
+    // Copy selected node for use at the top of select3
+    if (opt.selected) {
+
+        let clone = optEl.cloneNode()
+        clone.classList.add('selected-top')
+
+        // Format option if special formatting exists, else just fill option with text
+        if (config.formatOptionsFunction !== null) {
+            clone.innerHTML = config.formatOptionsFunction(opt)
+        } else {
+            if (opt.label.length) {
+                clone.textContent = opt.label
+            } else {
+                clone.textContent = opt.text
             }
         }
 
-        // Copy selected node for use at the top of select3
-        if (opt.selected) {
+        if (isMultipleSelect) {
+            let closeBtn = document.createElement('b')
+            closeBtn.classList.add('remove')
+            closeBtn.textContent = '×'
+            closeBtn.addEventListener('click', (e) => {
+                Select3_removeOption(select, select3, e.target.parentElement)
+            })
+            clone.prepend(closeBtn)
+        }
 
-            let clone = optEl.cloneNode()
-            clone.classList.add('selected-top')
+        select3.append(clone)
 
-            // Format option if special formatting exists, else just fill option with text
-            if (config.formatOptionsFunction !== null) {
-                clone.innerHTML = config.formatOptionsFunction(opt)
-            } else {
-                if (opt.label.length) {
-                    clone.textContent = opt.label
-                } else {
-                    clone.textContent = opt.text
-                }
+        optEl.classList.add('selected')
+        optEl.setAttribute('data-selected', '1')
+    } else {
+        optEl.setAttribute('data-selected', '0')
+    }
+
+    // Format option if special formatting exists, else just fill option with text
+    if (config.formatOptionsFunction !== null) {
+         optEl.innerHTML = config.formatOptionsFunction(opt)
+    } else {
+        if (opt.label.length) {
+            optEl.textContent = opt.label
+        } else {
+            optEl.textContent = opt.text
+        }
+    }
+
+    if (opt.disabled) {
+        optEl.classList.add('disabled')
+    }
+
+    optEl.addEventListener('click', (e) => {
+
+        let el = e.target
+        let cloneEl = el.cloneNode()
+
+        cloneEl.innerHTML = el.innerHTML
+        cloneEl.classList.add('selected-top')
+
+        // Can only do stuff if the option in the original select is not disabled
+        if (!opt.disabled) {
+
+            // If user selects an option, whilst already having max selected options
+            if (select.selectedOptions.length >= config.maximumSelectedOptions && optEl.getAttribute('data-selected') === '0') {
+                return
             }
 
-            if (isMultipleSelect) {
+            let isOptionAlreadySelected = false
+            if (
+                (!isMultipleSelect && select.val() === cloneEl.getAttribute('data-value')) ||
+                (isMultipleSelect && select.val().includes(cloneEl.getAttribute('data-value')))
+            ) {
+                isOptionAlreadySelected = true
+            }
+
+            // Handle selecting/deselecting
+            if (!isMultipleSelect && !isOptionAlreadySelected) {
+
+                let children = select.querySelectorAll('option')
+                for (let child of children) {
+                    child.removeAttribute('selected')
+                }
+
+                let select3Children = select3.querySelectorAll('.inner span')
+                for (let child of select3Children) {
+                    child.classList.remove('selected')
+                    child.setAttribute('data-selected', '0')
+                }
+
+                opt.setAttribute('selected', 'selected')
+                select3.querySelector('.selected-top, .placeholder').replaceWith(cloneEl)
+                optEl.classList.add('selected')
+                optEl.setAttribute('data-selected', '1')
+
+                // Trigger 'change' event on regular select only if option is not already selected.
+                select.dispatchEvent(new Event('change'))
+
+            } else if (isMultipleSelect) {
+
+                if (isOptionAlreadySelected) {
+                    select3.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]').remove()
+                    opt.removeAttribute('selected')
+                    optEl.classList.remove('selected')
+                    optEl.setAttribute('data-selected', '0')
+
+                    if (select.selectedOptions.length === 0 && config.placeholder !== '') {
+                        let placeholder = document.createElement('span')
+                        placeholder.classList.add('placeholder')
+                        placeholder.textContent = config.placeholder
+                        select3.prepend(placeholder)
+                    }
+                } else {
+                    select3.insertBefore(cloneEl, select3.querySelector('.inner'))
+                    opt.setAttribute('selected', 'selected')
+                    optEl.classList.add('selected')
+                    optEl.setAttribute('data-selected', '1')
+
+                    // Only happens if the option that was just clicked was the first selected option.
+                    if (select.selectedOptions.length === 1) {
+                        select3.querySelector(':scope > span.placeholder').remove()
+                    }
+                }
 
                 let closeBtn = document.createElement('b')
                 closeBtn.classList.add('remove')
@@ -175,123 +282,17 @@ function Select3_appendOptions(select, select3, parent, opts, isMultipleSelect, 
                 closeBtn.addEventListener('click', (e) => {
                     Select3_removeOption(select, select3, e.target.parentElement)
                 })
-                clone.prepend(closeBtn)
+                cloneEl.prepend(closeBtn)
+
+                select.dispatchEvent(new Event('change'))
             }
 
-            select3.append(clone)
-
-            optEl.classList.add('selected')
-            optEl.setAttribute('data-selected', '1')
-        } else {
-            optEl.setAttribute('data-selected', '0')
-        }
-
-        // Format option if special formatting exists, else just fill option with text
-        if (config.formatOptionsFunction !== null) {
-             optEl.innerHTML = config.formatOptionsFunction(opt)
-        } else {
-            if (opt.label.length) {
-                optEl.textContent = opt.label
-            } else {
-                optEl.textContent = opt.text
+            if (config.closeOnSelect) {
+                Select3_openCloseSelect3(select3, config)
             }
         }
-
-        if (opt.disabled) {
-            optEl.classList.add('disabled')
-        }
-
-        optEl.addEventListener('click', (e) => {
-
-            let el = e.target
-            let cloneEl = el.cloneNode()
-
-            cloneEl.innerHTML = el.innerHTML
-            cloneEl.classList.add('selected-top')
-
-            // Can only do stuff if the option in the original select is not disabled
-            if (!opt.disabled) {
-
-                // If user selects an option, whilst already having max selected options
-                if (select.selectedOptions.length >= config.maximumSelectedOptions && optEl.getAttribute('data-selected') === '0') {
-                    return
-                }
-
-                let isOptionAlreadySelected = false
-                if (
-                    (!isMultipleSelect && select.val() === cloneEl.getAttribute('data-value')) ||
-                    (isMultipleSelect && select.val().includes(cloneEl.getAttribute('data-value')))
-                ) {
-                    isOptionAlreadySelected = true
-                }
-
-                // Handle selecting/deselecting
-                if (!isMultipleSelect && !isOptionAlreadySelected) {
-
-                    let children = select.querySelectorAll('option')
-                    for (let child of children) {
-                        child.removeAttribute('selected')
-                    }
-
-                    let select3Children = select3.querySelectorAll('.inner span')
-                    for (let child of select3Children) {
-                        child.classList.remove('selected')
-                        child.setAttribute('data-selected', '0')
-                    }
-
-                    opt.setAttribute('selected', 'selected')
-                    select3.querySelector('.selected-top, .placeholder').replaceWith(cloneEl)
-                    optEl.classList.add('selected')
-                    optEl.setAttribute('data-selected', '1')
-
-                    // Trigger 'change' event on regular select only if option is not already selected.
-                    select.dispatchEvent(new Event('change'))
-
-                } else if (isMultipleSelect) {
-
-                    if (isOptionAlreadySelected) {
-                        select3.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]').remove()
-                        opt.removeAttribute('selected')
-                        optEl.classList.remove('selected')
-                        optEl.setAttribute('data-selected', '0')
-
-                        if (select.selectedOptions.length === 0 && config.placeholder !== '') {
-                            let placeholder = document.createElement('span')
-                            placeholder.classList.add('placeholder')
-                            placeholder.textContent = config.placeholder
-                            select3.prepend(placeholder)
-                        }
-                    } else {
-                        select3.insertBefore(cloneEl, select3.querySelector('.inner'))
-                        opt.setAttribute('selected', 'selected')
-                        optEl.classList.add('selected')
-                        optEl.setAttribute('data-selected', '1')
-
-                        // Only happens if the option that was just clicked was the first selected option.
-                        if (select.selectedOptions.length === 1) {
-                            select3.querySelector(':scope > span.placeholder').remove()
-                        }
-                    }
-
-                    let closeBtn = document.createElement('b')
-                    closeBtn.classList.add('remove')
-                    closeBtn.textContent = '×'
-                    closeBtn.addEventListener('click', (e) => {
-                        Select3_removeOption(select, select3, e.target.parentElement)
-                    })
-                    cloneEl.prepend(closeBtn)
-
-                    select.dispatchEvent(new Event('change'))
-                }
-
-                if (config.closeOnSelect) {
-                    Select3_openCloseSelect3(select3, config)
-                }
-            }
-        })
-
-        parent.append(optEl)
-    }
+    })
+    parent.append(optEl)
 }
 
 function Select3_removeOption(select, select3, option) {
@@ -311,35 +312,48 @@ function Select3_removeOption(select, select3, option) {
     select.dispatchEvent(new Event('change'))
 }
 
-function Select3_filterInput(filter, options) {
+function Select3_filterInput(filter, options, select, inner) {
 
     filter = filter.toUpperCase()
 
     for (let opt of options) {
         let txtValue = opt.textContent || opt.innerText
         if (txtValue.toUpperCase().indexOf(filter) > -1) {
-            opt.style.display = ''
+            opt.classList.remove('option-hidden')
         } else {
-            opt.style.display = 'none'
-        }
-
-        let isAnyOptionVisible = false
-        let siblings = opt.parentElement.querySelectorAll('span:not(.title)')
-
-        for (let sibling of siblings) {
-            if (sibling.style.display !== 'none') {
-                isAnyOptionVisible = true
-                break
-            }
+            opt.classList.add('option-hidden')
         }
 
         if (opt.closest('div.optgroup') !== null) {
+
+            let isAnyOptionVisible = false
+            let siblings = opt.parentElement.querySelectorAll('span:not(.title, .no-results)')
+
+            for (let sibling of siblings) {
+                if (!sibling.classList.contains('option-hidden')) {
+                    isAnyOptionVisible = true
+                    break
+                }
+            }
+
             if (isAnyOptionVisible) {
-                opt.closest('div.optgroup').style.display = ''
+                opt.closest('div.optgroup').classList.remove('option-hidden')
             } else {
-                opt.closest('div.optgroup').style.display = 'none'
+                opt.closest('div.optgroup').classList.add('option-hidden')
             }
         }
+    }
+
+
+    let children = inner.querySelectorAll('span:not(.title, .no-results, .option-hidden)')
+
+    if (children.length) {
+        inner.querySelector('.no-results')?.remove()
+    } else if (!children.length && !inner.querySelector('.no-results')) {
+        let noResults = document.createElement('SPAN')
+        noResults.classList.add('no-results')
+        noResults.textContent = select.dataset.noResults
+        inner.append(noResults)
     }
 }
 

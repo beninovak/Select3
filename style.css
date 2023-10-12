@@ -121,6 +121,11 @@ div.select3.single > .selected-top {
     text-overflow: ellipsis;
 }
 
+.select3 .inner span.option-hidden,
+.select3 .inner .optgroup.option-hidden {
+    display: none;
+}
+
 .select3 .inner span:not(.title):hover {
     background: #efefef;
 }
@@ -194,12 +199,12 @@ div.select3.single > .selected-top {
     padding-inline-start: 10px;
 }
 
-.select3.multiple .inner span:not(.title) {
+.select3.multiple .inner span:not(.title, .no-results) {
     position: relative;
     padding-inline-start: 45px;
 }
 
-.select3.multiple .inner span:not(.title)::before {
+.select3.multiple .inner span:not(.title, .no-results)::before {
     content: '';
     position: absolute;
     top: 12px;
