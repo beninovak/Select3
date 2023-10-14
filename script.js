@@ -5,13 +5,17 @@ Element.prototype.Select3 = function(config) {
 
     // If any options were set, apply them
     config = Select3_applyConfig(config)
+    // console.table(config)
 
-    // TODO --> Search input sticky??
-    // TODO --> When searching add a 'no results' thing if nothing was found
+    // TODO --> <label> for search <input>? --> For SEO
+    // TODO --> Consider accessibility
+    // TODO --> Open select on top/bottom depending on where screen space is
     // TODO --> Check multiple scenarios ( single selection with and without optgroups and multiple selection with and without optgroups etc. )
     // TODO --> Check all other TODOs in IDE
     // TODO --> Try overriding with custom .css styles
     // TODO --> Test on mobile - github page
+    // TODO --> Clear stupid // <code>
+    // TODO --> Think about adding a 'destroy' function
     // TODO --> Minimize file: https://codebeautify.org/minify-js
 
     let select3 = document.createElement('div')
@@ -23,9 +27,18 @@ Element.prototype.Select3 = function(config) {
 
     // Handles closing
     select3.addEventListener('click', (e) => {
+
         const classes = e.target.classList
         if (classes.contains('select3') || classes.contains('selected-top') || classes.contains('placeholder')) {
-            Select3_openCloseSelect3(select3, config)
+
+            let closestSelect3 = e.target.closest('div.select3')
+            Select3_openCloseSelect3(closestSelect3, config)
+
+            for (let sel3 of document.querySelectorAll('div.select3')) {
+                if (!sel3.isEqualNode(closestSelect3)) {
+                    Select3_closeSelect3(sel3)
+                }
+            }
         }
     })
 
@@ -44,31 +57,38 @@ Element.prototype.Select3 = function(config) {
 
     // Search input
     if (config.search) {
-        let input = document.createElement('input')
-        input.classList.add('search')
-        input.setAttribute('type', 'search')
+
+        let searchWrapper = document.createElement('div')
+        searchWrapper.classList.add('search-wrapper')
+
+        let searchInput = document.createElement('input')
+        searchInput.classList.add('search')
+        searchInput.setAttribute('type', 'search')
 
         let previousSearchLength = 0
 
-        input.addEventListener('keyup', (e) => {
+        searchInput.addEventListener('keyup', (e) => {
             let searchLength = e.target.value.length
             if (searchLength >= config.minimumInputLength || searchLength < previousSearchLength) {
-                let childNodes = e.target.parentElement.querySelectorAll('span:not(.title, .no-results)')
-                Select3_filterInput(e.target.value, childNodes, select, inner)
+                let childNodes = e.target.closest('.inner').querySelectorAll('span:not(.title, .no-results)')
+                Select3_filterInput(e.target.value, childNodes, select, inner, config)
             }
             previousSearchLength = searchLength
         })
-        inner.prepend(input)
+        searchWrapper.append(searchInput)
+        inner.prepend(searchWrapper)
     }
 
-    let label = document.querySelector('label[for="' + select.id + '"]')
-    if (label !== null) {
-        // label.classList.add('for-select3')
-        label.addEventListener('click', () => {
-            Select3_openCloseSelect3(select3, config)
-        })
-    }
+    // let label = document.querySelector('label[for="' + select.id + '"]')
+    // if (label !== null) {
+    //     label.addEventListener('click', (e) => {
+    //         e.stopPropagation()
+    //         console.log('listener')
+    //         Select3_openCloseSelect3(select3, config)
+    //     })
+    // }
 
+    console.log(select.children)
     for (let child of select.children) {
 
         if (child.tagName === 'OPTION') {
@@ -120,24 +140,38 @@ Element.prototype.Select3 = function(config) {
     return select
 }
 
-function Select3_openCloseSelect3(select3, config) {
+function Select3_openSelect3(select3, config) {
+
     let dropdown = select3.querySelector('.inner')
-    let dropdownHeight = dropdown.scrollHeight > config.dropdownMaxHeight ? config.dropdownMaxHeight : dropdown.scrollHeight
+    select3.classList.add('opened')
 
-    select3.classList.toggle('opened')
-    if (select3.classList.contains('opened')) {
-        dropdown.style.maxHeight = dropdownHeight + 'px'
-    } else {
-        dropdown.style.maxHeight =  '0px'
-    }
+    let dropdownMaxHeight = dropdown.scrollHeight
+    dropdownMaxHeight = dropdownMaxHeight > config.dropdownMaxHeight ? config.dropdownMaxHeight : dropdownMaxHeight
+    dropdown.style.maxHeight = dropdownMaxHeight + 'px'
+}
 
-    if (config.search) {
+function Select3_closeSelect3(select3, config = {}) {
+    let dropdown = select3.querySelector('.inner')
+    select3.classList.remove('opened')
+    dropdown.style.maxHeight =  '0px'
+
+    if (select3.querySelector('input.search')?.length) {
         select3.querySelector('input.search').value = ''
-        select3.querySelector('.no-results')?.remove()
-        // Show all options again
-        for (let opt of select3.querySelectorAll('.option-hidden')) {
-            opt.classList.remove('option-hidden')
-        }
+    }
+    select3.querySelector('.no-results')?.remove()
+    // Show all options again
+    for (let opt of select3.querySelectorAll('.option-hidden')) {
+        opt.classList.remove('option-hidden')
+    }
+}
+
+function Select3_openCloseSelect3(select3, config = {}) {
+    select3.classList.toggle('opened')
+
+    if (select3.classList.contains('opened')) {
+        Select3_openSelect3(select3, config)
+    } else {
+        Select3_closeSelect3(select3, config)
     }
 }
 
@@ -221,6 +255,7 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
             }
 
             let isOptionAlreadySelected = false
+
             if (
                 (!isMultipleSelect && select.val() === cloneEl.getAttribute('data-value')) ||
                 (isMultipleSelect && select.val().includes(cloneEl.getAttribute('data-value')))
@@ -272,7 +307,7 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
 
                     // Only happens if the option that was just clicked was the first selected option.
                     if (select.selectedOptions.length === 1) {
-                        select3.querySelector(':scope > span.placeholder').remove()
+                        select3.querySelector(':scope > span.placeholder')?.remove()
                     }
                 }
 
@@ -288,7 +323,7 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
             }
 
             if (config.closeOnSelect) {
-                Select3_openCloseSelect3(select3, config)
+                Select3_closeSelect3(select3, config)
             }
         }
     })
@@ -312,7 +347,7 @@ function Select3_removeOption(select, select3, option) {
     select.dispatchEvent(new Event('change'))
 }
 
-function Select3_filterInput(filter, options, select, inner) {
+function Select3_filterInput(filter, options, select, inner, config) {
 
     filter = filter.toUpperCase()
 
@@ -344,16 +379,18 @@ function Select3_filterInput(filter, options, select, inner) {
         }
     }
 
+    // Handles 'no-results' thing when searching
+    if (config.searchNoResults !== '') {
+        let children = inner.querySelectorAll('span:not(.title, .no-results, .option-hidden)')
 
-    let children = inner.querySelectorAll('span:not(.title, .no-results, .option-hidden)')
-
-    if (children.length) {
-        inner.querySelector('.no-results')?.remove()
-    } else if (!children.length && !inner.querySelector('.no-results')) {
-        let noResults = document.createElement('SPAN')
-        noResults.classList.add('no-results')
-        noResults.textContent = select.dataset.noResults
-        inner.append(noResults)
+        if (children.length) {
+            inner.querySelector('.no-results')?.remove()
+        } else if (!children.length && !inner.querySelector('.no-results')) {
+            let noResults = document.createElement('span')
+            noResults.classList.add('no-results')
+            noResults.textContent = config.searchNoResults
+            inner.append(noResults)
+        }
     }
 }
 
@@ -365,6 +402,7 @@ function Select3_applyConfig(config) {
         closeOnSelect: true,
         minimumInputLength: 3,
         placeholder: '',
+        searchNoResults: '',
         dropdownMaxHeight: 300,
         maximumSelectedOptions: 100,
         formatOptionsFunction: null,
@@ -395,14 +433,17 @@ function Select3_isOptionValid(key, value) {
         case 'minimumInputLength':
             return typeof value === 'number' && value > 0
 
-        case 'placeholder':
-            return typeof value === 'string' && value.length > 0 && value.length < 200
-
         case 'dropdownMaxHeight':
             return typeof value === 'number' && value > 0
 
         case 'maximumSelectedOptions':
             return typeof value === 'number' && value > 0
+
+        case 'placeholder':
+            return typeof value === 'string' && value.length > 0 && value.length < 200
+
+        case 'searchNoResults':
+            return typeof value === 'string' && value.length > 0 && value.length < 200
 
         case 'formatOptionsFunction':
             return typeof value === 'function'
@@ -411,12 +452,13 @@ function Select3_isOptionValid(key, value) {
 
 // Program start
 let test2 = document.querySelector('.select3.groups').Select3({
-    search: true,
+    search: false,
     closeOnSelect: false,
     minimumInputLength: 2,
     dropdownMaxHeight: 300,
-    maximumSelectedOptions: 4,
-    placeholder: 'Please select an option',
+    maximumSelectedOptions: 2,
+    placeholder: 'Please select an option...',
+    searchNoResults: 'No results found.',
 })
 test2.addEventListener('change', () => {
     console.log(test2.val())
@@ -428,31 +470,19 @@ let test = document.querySelector('.select3.no-close').Select3({
     dropdownMaxHeight: 300,
     allowNoSelection: true,
     placeholder: 'Please select an option...',
+    searchNoResults: 'Nč najdu poba. bl slaba',
 })
 test.addEventListener('change', () => {
     console.log(test.val())
 })
+
 /* Handle closing of select when clicking outside it */
-/* Consider clearing search input when this happens */
-// document.addEventListener('click', (e) => {
-//     let el = e.target
-//     let clickedSelect = el.closest('.select3')
-//     console.log(clickedSelect)
-//
-//     // If no parent has class "select3"
-//     if (clickedSelect === null) {
-//         document.querySelectorAll('div.select3').forEach(node => {
-//             let dropdown = node.querySelector('.inner')
-//             node.classList.remove('opened')
-//             dropdown.style.maxHeight =  '0px'
-//         })
-//     } else {
-//         document.querySelectorAll('div.select3').forEach(node => {
-//             if (!node.isEqualNode(clickedSelect)) {
-//                 let dropdown = node.querySelector('.inner')
-//                 node.classList.remove('opened')
-//                 dropdown.style.maxHeight =  '0px'
-//             }
-//         })
-//     }
-// })
+document.addEventListener('click', (e) => {
+    let el = e.target
+    let clickedSelect = el.closest('.select3')
+    if (clickedSelect === null) {
+        for (let select3 of document.querySelectorAll('div.select3')) {
+            Select3_closeSelect3(select3)
+        }
+    }
+})

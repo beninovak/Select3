@@ -13,10 +13,14 @@ body {
     padding-bottom: 500px;
 }
 
-*, *::after, *::before {
-    color: inherit;
+div.select3 {
+    box-sizing: border-box;
+}
+
+div.select3 *,
+div.select3 *::after,
+div.select3 *::before {
     box-sizing: inherit;
-    font-family: inherit;
 }
 /* -------RESETS END------- */
 
@@ -86,15 +90,24 @@ div.select3.opened {
     background: #fff;
 }
 
-div.select3.single > .selected-top {
-    padding-inline-start: 25px;
-}
+/*div.select3.single > .selected-top {*/
+/*    padding-inline-start: 20px;*/
+/*}*/
 
 .select3 > .placeholder {
     color: #666;
     width: 100%;
     height: 40px;
-    /*display: none;*/
+    background: #fff;
+}
+
+.select3 .inner div.search-wrapper {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    max-width: 100%;
     background: #fff;
 }
 
@@ -115,10 +128,21 @@ div.select3.single > .selected-top {
     height: 40px; /* Possibly WIP */
     display: block;
     text-align: start;
-    padding-inline: 25px;
+    padding-inline: 10px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.select3 .inner .optgroup span {
+    padding-inline-start: 25px;
+}
+
+.select3 .inner span.no-results {
+    min-height: 40px;
+    height: fit-content;
+    padding-inline: 10px; /* Same as search input margin-inline-start */
+    white-space: break-spaces;
 }
 
 .select3 .inner span.option-hidden,
@@ -147,12 +171,13 @@ div.select3.single > .selected-top {
     flex-wrap: wrap;
     row-gap: 8px;
     column-gap: 8px;
-    padding-block: 6px;
+    /*padding-block: 6px;*/
 }
 
 .select3.multiple > .placeholder {
     height: 28px;
     line-height: 28px;
+    padding-top: 6px;
 }
 
 .select3.multiple > .selected-top {
