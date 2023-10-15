@@ -7,8 +7,6 @@ Element.prototype.Select3 = function(config) {
     config = Select3_applyConfig(config)
     // console.table(config)
 
-    // TODO --> <label> for search <input>? --> For SEO
-    // TODO --> Consider accessibility
     // TODO --> Check multiple scenarios ( single selection with and without optgroups and multiple selection with and without optgroups etc. )
     // TODO --> Check all other TODOs in IDE
     // TODO --> Try overriding with custom .css styles
@@ -53,6 +51,7 @@ Element.prototype.Select3 = function(config) {
 
     let inner = document.createElement('div')
     inner.classList.add('inner')
+    // TODO - consider this --> inner.setAttribute('role', 'listbox')
 
     // Search input
     if (config.search) {
@@ -149,19 +148,21 @@ function Select3_openSelect3(select3, config) {
     dropdownMaxHeight = dropdownMaxHeight > config.dropdownMaxHeight ? config.dropdownMaxHeight : dropdownMaxHeight
     inner.style.maxHeight = dropdownMaxHeight + 'px'
 
+
     inner.classList.remove('drop-up')
 
+    // Determine whether the options should drop-down or drop-up
     let innerFromBottom = window.innerHeight - inner.getBoundingClientRect().top
-
     if (inner.offsetHeight >= innerFromBottom) {
         inner.classList.add('drop-up')
     }
 }
 
-function Select3_closeSelect3(select3, config = {}) {
-    let dropdown = select3.querySelector('.inner')
+function Select3_closeSelect3(select3) {
+
+    let inner = select3.querySelector('.inner')
     select3.classList.remove('opened')
-    dropdown.style.maxHeight =  '0px'
+    inner.style.maxHeight =  '0px'
 
     if (select3.querySelector('input.search') !== null) {
         select3.querySelector('input.search').value = ''
@@ -180,7 +181,7 @@ function Select3_openCloseSelect3(select3, config = {}) {
     if (select3.classList.contains('opened')) {
         Select3_openSelect3(select3, config)
     } else {
-        Select3_closeSelect3(select3, config)
+        Select3_closeSelect3(select3)
     }
 }
 
@@ -188,6 +189,7 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
 
     let optEl = document.createElement('span')
     optEl.setAttribute('data-value', opt.value.toString())
+    // TODO - consider this --> optEl.setAttribute('role', 'option')
 
     // Transfer data- attributes
     if (Object.keys(opt.dataset).length) {
@@ -200,17 +202,18 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
     // Copy selected node for use at the top of select3
     if (opt.selected) {
 
-        let clone = optEl.cloneNode()
-        clone.classList.add('selected-top')
+        let cloneEl = optEl.cloneNode()
+        // TODO - consider this --> cloneEl.removeAttribute('role')
+        cloneEl.classList.add('selected-top')
 
         // Format option if special formatting exists, else just fill option with text
         if (config.formatOptionsFunction !== null) {
-            clone.innerHTML = config.formatOptionsFunction(opt)
+            cloneEl.innerHTML = config.formatOptionsFunction(opt)
         } else {
             if (opt.label.length) {
-                clone.textContent = opt.label
+                cloneEl.textContent = opt.label
             } else {
-                clone.textContent = opt.text
+                cloneEl.textContent = opt.text
             }
         }
 
@@ -221,10 +224,10 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
             closeBtn.addEventListener('click', (e) => {
                 Select3_removeOption(select, select3, e.target.parentElement)
             })
-            clone.prepend(closeBtn)
+            cloneEl.prepend(closeBtn)
         }
 
-        select3.append(clone)
+        select3.append(cloneEl)
 
         optEl.classList.add('selected')
         optEl.setAttribute('data-selected', '1')
@@ -251,7 +254,7 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
 
         let el = e.target
         let cloneEl = el.cloneNode()
-
+        // TODO - consider this --> cloneEl.removeAttribute('role')
         cloneEl.innerHTML = el.innerHTML
         cloneEl.classList.add('selected-top')
 
