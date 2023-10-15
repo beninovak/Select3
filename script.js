@@ -9,7 +9,6 @@ Element.prototype.Select3 = function(config) {
 
     // TODO --> <label> for search <input>? --> For SEO
     // TODO --> Consider accessibility
-    // TODO --> Open select on top/bottom depending on where screen space is
     // TODO --> Check multiple scenarios ( single selection with and without optgroups and multiple selection with and without optgroups etc. )
     // TODO --> Check all other TODOs in IDE
     // TODO --> Try overriding with custom .css styles
@@ -79,16 +78,17 @@ Element.prototype.Select3 = function(config) {
         inner.prepend(searchWrapper)
     }
 
-    // let label = document.querySelector('label[for="' + select.id + '"]')
-    // if (label !== null) {
-    //     label.addEventListener('click', (e) => {
-    //         e.stopPropagation()
-    //         console.log('listener')
-    //         Select3_openCloseSelect3(select3, config)
-    //     })
-    // }
+    let label = document.querySelector('label[for="' + select.id + '"]')
+    if (label !== null) {
+        label.addEventListener('click', (e) => {
+            e.stopPropagation()
+            for (let sel3 of document.querySelectorAll('div.select3')) {
+                Select3_closeSelect3(sel3)
+            }
+            Select3_openSelect3(select3, config)
+        })
+    }
 
-    console.log(select.children)
     for (let child of select.children) {
 
         if (child.tagName === 'OPTION') {
@@ -142,12 +142,20 @@ Element.prototype.Select3 = function(config) {
 
 function Select3_openSelect3(select3, config) {
 
-    let dropdown = select3.querySelector('.inner')
+    let inner = select3.querySelector('.inner')
     select3.classList.add('opened')
 
-    let dropdownMaxHeight = dropdown.scrollHeight
+    let dropdownMaxHeight = inner.scrollHeight
     dropdownMaxHeight = dropdownMaxHeight > config.dropdownMaxHeight ? config.dropdownMaxHeight : dropdownMaxHeight
-    dropdown.style.maxHeight = dropdownMaxHeight + 'px'
+    inner.style.maxHeight = dropdownMaxHeight + 'px'
+
+    inner.classList.remove('drop-up')
+
+    let innerFromBottom = window.innerHeight - inner.getBoundingClientRect().top
+
+    if (inner.offsetHeight >= innerFromBottom) {
+        inner.classList.add('drop-up')
+    }
 }
 
 function Select3_closeSelect3(select3, config = {}) {
@@ -155,9 +163,10 @@ function Select3_closeSelect3(select3, config = {}) {
     select3.classList.remove('opened')
     dropdown.style.maxHeight =  '0px'
 
-    if (select3.querySelector('input.search')?.length) {
+    if (select3.querySelector('input.search') !== null) {
         select3.querySelector('input.search').value = ''
     }
+
     select3.querySelector('.no-results')?.remove()
     // Show all options again
     for (let opt of select3.querySelectorAll('.option-hidden')) {

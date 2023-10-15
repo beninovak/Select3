@@ -11,6 +11,7 @@ body {
     overflow-x: hidden;
     background: #575757;
     padding-bottom: 500px;
+    padding-top: 500px; /* Temp */
 }
 
 div.select3 {
@@ -81,6 +82,14 @@ div.select3.opened {
     max-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
+    border-top: 1px solid #000;
+}
+
+.select3 .inner.drop-up {
+    top: unset;
+    bottom: 100%;
+    border-top: none;
+    border-bottom: 1px solid #000;
 }
 
 .select3 > .selected-top {
@@ -89,10 +98,6 @@ div.select3.opened {
     display: block;
     background: #fff;
 }
-
-/*div.select3.single > .selected-top {*/
-/*    padding-inline-start: 20px;*/
-/*}*/
 
 .select3 > .placeholder {
     color: #666;
@@ -112,10 +117,11 @@ div.select3.opened {
 }
 
 .select3 .inner input.search {
+    width: calc(100% - 20px);
     font-size: 18px;
     height: 32px;
     padding: 3px;
-    width: calc(100% - 20px);
+    margin-top: 5px;
     margin-inline-start: 10px;
 }
 
