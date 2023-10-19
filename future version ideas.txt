@@ -1,0 +1,8 @@
+// TODO --> Consider dynamic option creation? Maybe in a future version
+// TODO --> Think about adding a destroy/reinit function
+// TODO --> Consider wrapping matching search results in <span> to
+            enable highlighting the part of options that match the search string
+
+// TODO --> Consider appending a 'clear()' method to original select to reset it to its starting value
+// TODO --> Accessibility ( role 'listbox' for inner, role 'option' for options )
+
