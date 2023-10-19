@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Select3</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="select3.css">
 </head>
 <body>
 
@@ -14,16 +14,15 @@
 
         <label for="select3">Custom select 1</label>
         <select multiple="multiple" id="select3" class="select3 groups" name="w-optgroups">
-            <!--<option value="" selected="selected"></option>-->
-            <!--<option value="zero"></option>-->
-            <optgroup label="optgroup 1">
+            <option value=""></option>
+            <optgroup label="first group">
                 <option value="banana">Banana</option>
                 <option value="apple">Apple</option>
                 <option value="pomegranate">Pomegranate</option>
                 <option value="lidl">Lidl</option>
-                <option value="ledl">Ledl</option>
             </optgroup>
-            <optgroup label="optgroup 2">
+            <optgroup label="second group">
+                <option value="ledl">Ledl</option>
                 <option value="pear">Pear</option>
                 <option value="lemon">Lemon</option>
                 <option value="lime">Lime</option>
@@ -37,15 +36,15 @@
 
     <form id="test-form2" method="get">
         <label for="basic-select">Custom select 2</label>
-        <select data-test="123" id="basic-select" class="select3 no-close" name="no-optgroups">
+        <select data-no-results="No results found" id="basic-select" class="select3 no-close" name="no-optgroups">
             <option value=""></option>
-            <optgroup label="test">
-    <!--            <option value=""></option>-->
+            <optgroup label="test1">
                 <option data-img-src="test/cart.png" value="cart">Cart</option>
                 <option data-img-src="test/tree.png" value="tree">Tree</option>
-                <option data-img-src="test/user.png" disabled value="user">User</option>
+                <option data-img-src="test/user.png" value="user">User</option>
             </optgroup>
-            <optgroup label="optgroup 2">
+            <optgroup label="test2">
+                <option data-img-src="test/user.png" value="test123">Test456</option>
                 <option data-img-src="test/search.png" value="search">Search</option>
                 <option data-img-src="test/globe.png" value="globe">Globe</option>
             </optgroup>
@@ -55,6 +54,6 @@
     </form>
 </div>
 
-<script src="script.js"></script>
+<script src="select3.js"></script>
 </body>
 </html>
