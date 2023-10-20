@@ -7,8 +7,6 @@ Element.prototype.Select3 = function(config) {
     config = Select3_applyConfig(config)
     // console.table(config)
 
-    // TODO --> Try overriding with custom .css styles
-    // TODO --> Test on mobile - github page
     // TODO --> Minimize file: https://codebeautify.org/minify-js
     // TODO --> Check all other TODOs in IDE
 
@@ -131,10 +129,6 @@ Element.prototype.Select3 = function(config) {
             value.push(selOpt.value)
         }
         return select.multiple ? value : value[0]
-    }
-
-    select.clear = function() {
-
     }
 
     return select
