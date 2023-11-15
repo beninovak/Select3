@@ -4,7 +4,6 @@ Element.prototype.Select3 = function(config) {
     if (select.tagName !== 'SELECT') return false
 
     if (select.hasAttribute('data-select3-initialized') && select.getAttribute('data-select3-initialized') == '1') {
-        console.log(select.nextSibling)
         if (select.nextSibling?.classList.contains('select3')) {
             select.nextSibling.remove();
         }
@@ -138,11 +137,17 @@ Element.prototype.Select3 = function(config) {
         return select.multiple ? value : value[0]
     }
 
-    select.open = function() {
+    select.open = function(e = null) {
+        if (e != null) {
+            e.stopPropagation()
+        }
         Select3_openSelect3(select3, config.dropdownMaxHeight)
     }
 
-    select.close = function() {
+    select.close = function(e = null) {
+        if (e != null) {
+            e.stopPropagation()
+        }
         Select3_closeSelect3(select3)
     }
 
@@ -480,7 +485,7 @@ function Select3_isOptionValid(key, value) {
 /* Handle closing of select when clicking outside it */
 document.addEventListener('click', (e) => {
     let el = e.target
-    let clickedSelect = el.closest('.select3')
+    let clickedSelect = el.closest('div.select3')
     if (clickedSelect === null) {
         for (let select3 of document.querySelectorAll('div.select3')) {
             Select3_closeSelect3(select3)
