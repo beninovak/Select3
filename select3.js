@@ -3,9 +3,17 @@ Element.prototype.Select3 = function(config) {
     const select = this
     if (select.tagName !== 'SELECT') return false
 
+    if (select.hasAttribute('data-select3-initialized') && select.getAttribute('data-select3-initialized') == '1') {
+        console.log(select.nextSibling)
+        if (select.nextSibling?.classList.contains('select3')) {
+            select.nextSibling.remove();
+        }
+    }
+
     // If any options were set, apply them
     config = Select3_applyConfig(config)
 
+    // TODO --> If Select3 function called multiple times on <select>, destroy old one and re-initialize
     // TODO --> Consider putting all other functions inside this one
     // TODO --> Minimize file: https://codebeautify.org/minify-js
     // TODO --> Check all other TODOs in IDE
@@ -46,7 +54,6 @@ Element.prototype.Select3 = function(config) {
 
     let inner = document.createElement('div')
     inner.classList.add('inner')
-    // TODO - consider this --> inner.setAttribute('role', 'listbox')
 
     // Search input
     if (config.search) {
@@ -139,6 +146,8 @@ Element.prototype.Select3 = function(config) {
         Select3_closeSelect3(select3)
     }
 
+    select.setAttribute('data-select3-initialized', '1')
+
     return select
 }
 
@@ -191,7 +200,6 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
 
     let optEl = document.createElement('span')
     optEl.setAttribute('data-value', opt.value.toString())
-    // TODO - consider this --> optEl.setAttribute('role', 'option')
 
     // Transfer data- attributes
     if (Object.keys(opt.dataset).length) {
@@ -205,7 +213,6 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
     if (opt.selected) {
 
         let cloneEl = optEl.cloneNode()
-        // TODO - consider this --> cloneEl.removeAttribute('role')
         cloneEl.classList.add('selected-top')
 
         // Format option if special formatting exists, else just fill option with text
@@ -256,7 +263,6 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
 
         let el = e.target
         let cloneEl = el.cloneNode()
-        // TODO - consider this --> cloneEl.removeAttribute('role')
         cloneEl.innerHTML = el.innerHTML
         cloneEl.classList.add('selected-top')
 
@@ -481,3 +487,5 @@ document.addEventListener('click', (e) => {
         }
     }
 })
+
+// document.querySelector('#select3').Select3({})

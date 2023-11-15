@@ -1,5 +1,6 @@
-// TODO --> Consider dynamic option creation? Maybe in a future version
-// TODO --> Think about adding a destroy/reinit function
+// TODO --> Consider adding on option which would allow the user to specify HTMl
+            to be shown if a certain number of options have been selected on multiple select
+// TODO --> Consider dynamic option creation? Maybe in a future version...
 // TODO --> Consider wrapping matching search results in <span> to
             enable highlighting the part of options that match the search string
 // TODO --> Accessibility ( role 'listbox' for inner, role 'option' for options )
