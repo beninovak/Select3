@@ -5,16 +5,14 @@ Element.prototype.Select3 = function(config) {
 
     if (select.hasAttribute('data-select3-initialized') && select.getAttribute('data-select3-initialized') == '1') {
         if (select.nextSibling?.classList.contains('select3')) {
-            select.nextSibling.remove();
+            select.nextSibling.remove()
         }
     }
 
     // If any options were set, apply them
     config = Select3_applyConfig(config)
 
-    // TODO --> If Select3 function called multiple times on <select>, destroy old one and re-initialize
     // TODO --> Consider putting all other functions inside this one
-    // TODO --> Minimize file: https://codebeautify.org/minify-js
     // TODO --> Check all other TODOs in IDE
 
     let select3 = document.createElement('div')
@@ -493,4 +491,6 @@ document.addEventListener('click', (e) => {
     }
 })
 
-// document.querySelector('#select3').Select3({})
+document.querySelector('#select3').Select3({
+    closeOnSelect: false,
+})
