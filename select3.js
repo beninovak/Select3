@@ -9,12 +9,9 @@ Element.prototype.Select3 = function(config) {
         }
     }
 
-    // TODO -----------------------------------------------------------------------
-    // TODO -----------------------------------------------------------------------
-    // TODO -----------------------------------------------------------------------
-    // TODO ----If single select, fill first empty option with placeholder text----
-    // TODO -----------------------------------------------------------------------
-    // TODO -----------------------------------------------------------------------
+    if (!select.multiple) {
+        config.closeOnSelect = true
+    }
 
     // If any options were set, apply them
     config = Select3_applyConfig(config)
@@ -116,11 +113,10 @@ Element.prototype.Select3 = function(config) {
         }
     }
 
-    if (config.placeholder !== '' && (select.selectedOptions.length === 0 || (select[0].value === '' && select[0].textContent === ''))) {
+    if (select.selectedOptions.length === 0 || (select[0].value === '' && select[0].textContent === '')) {
         let placeholder = document.createElement('span')
         placeholder.classList.add('placeholder')
-        placeholder.textContent = config.placeholder
-
+        placeholder.textContent = (config.placeholder !== '' ? config.placeholder : '\u00A0')
         select3.querySelector('span.selected-top')?.remove()
         select3.prepend(placeholder)
     }
@@ -209,17 +205,35 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
 
     let isMultipleSelect = select.multiple
 
+    // Transfer data- attributes
+    if (Object.keys(opt.dataset).length) {
+        let optDataSet = opt.dataset
+        for (const property in optDataSet) {
+            optEl.setAttribute('data-' + property, optDataSet[property])
+        }
+    }
+
+    if (opt.value === '' && opt.textContent === '') {
+        optEl.classList.add('placeholder')
+        optEl.textContent = (config.placeholder !== '' ? config.placeholder : '\u00A0')
+    } else {
+        // Format option if special formatting exists, else just fill option with text
+        if (config.formatOptionsFunction !== null) {
+            let content = document.createElement('span')
+            content.append(config.formatOptionsFunction(opt))
+            optEl.innerHTML = content.innerHTML
+        } else {
+            optEl.textContent = (opt.label.length ? opt.label : opt.textContent)
+        }
+    }
+
     // Copy selected node for use at the top of select3
     if (opt.selected) {
 
         let cloneEl = optEl.cloneNode()
         cloneEl.classList.add('selected-top')
 
-        if (opt.label.length) {
-            cloneEl.textContent = opt.label
-        } else {
-            cloneEl.textContent = opt.textContent
-        }
+        cloneEl.textContent = (opt.label.length ? opt.label : opt.textContent)
 
         if (isMultipleSelect) {
             cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
@@ -231,27 +245,6 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
         optEl.setAttribute('data-selected', '1')
     } else {
         optEl.setAttribute('data-selected', '0')
-    }
-
-    // Transfer data- attributes
-    if (Object.keys(opt.dataset).length) {
-        let optDataSet = opt.dataset
-        for (const property in optDataSet) {
-            optEl.setAttribute('data-' + property, optDataSet[property])
-        }
-    }
-
-    // Format option if special formatting exists, else just fill option with text
-    if (config.formatOptionsFunction !== null) {
-        let content = document.createElement('span')
-        content.append(config.formatOptionsFunction(opt))
-        optEl.innerHTML = content.innerHTML
-    } else {
-        if (opt.label.length) {
-            optEl.textContent = opt.label
-        } else {
-            optEl.textContent = opt.text
-        }
     }
 
     if (opt.disabled) {
@@ -483,31 +476,17 @@ function Select3_isOptionValid(key, value) {
     }
 }
 
-/* Handle closing of select when clicking outside it */
-document.addEventListener('click', (e) => {
-    let el = e.target
-    let clickedSelect = el.closest('div.select3')
-    if (clickedSelect === null) {
-        for (let select3 of document.querySelectorAll('div.select3')) {
-            Select3_closeSelect3(select3)
+function Select3_initDocumentListener() {
+    /* Handle closing of select when clicking outside it */
+    document.addEventListener('click', (e) => {
+        let el = e.target
+        let clickedSelect = el.closest('div.select3')
+        if (clickedSelect === null) {
+            for (let select3 of document.querySelectorAll('div.select3')) {
+                Select3_closeSelect3(select3)
+            }
         }
-    }
-})
+    })
+}
 
-document.querySelector('#select3').Select3({
-    closeOnSelect: false,
-    placeholder: 'ioauefbgn97wa3n9fgn3q0',
-    maximumSelectedOptions: 4,
-    formatOptionsFunction: function(option) {
-        if (option.dataset.img) {
-            let span = document.createElement('span')
-            let image = document.createElement('img')
-            image.src = option.dataset.img
-            span.append(image)
-            span.append(option.textContent)
-            return span
-        } else {
-            return option.textContent
-        }
-    }
-})
+Select3_initDocumentListener()
