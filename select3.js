@@ -9,6 +9,13 @@ Element.prototype.Select3 = function(config) {
         }
     }
 
+    // TODO -----------------------------------------------------------------------
+    // TODO -----------------------------------------------------------------------
+    // TODO -----------------------------------------------------------------------
+    // TODO ----If single select, fill first empty option with placeholder text----
+    // TODO -----------------------------------------------------------------------
+    // TODO -----------------------------------------------------------------------
+
     // If any options were set, apply them
     config = Select3_applyConfig(config)
 
@@ -90,7 +97,7 @@ Element.prototype.Select3 = function(config) {
     for (let child of select.children) {
 
         if (child.tagName === 'OPTION') {
-            Select3_appendOptions(select, select3, inner, child, select.multiple, config)
+            Select3_appendOptions(select, select3, inner, child, config)
         } else if (child.tagName === 'OPTGROUP') {
 
             let optGroupEl = document.createElement('div')
@@ -103,26 +110,22 @@ Element.prototype.Select3 = function(config) {
             optGroupEl.append(optGroupTitle)
 
             for (let opt of child.children) {
-                Select3_appendOptions(select, select3, optGroupEl, opt, select.multiple, config)
+                Select3_appendOptions(select, select3, optGroupEl, opt, config)
             }
             inner.append(optGroupEl)
         }
     }
 
-    select3.append(inner)
-
-    if (
-        (select.multiple && select.selectedOptions.length === 0 && config.placeholder !== '') ||
-        (!select.multiple && select[0].value === '' && select[0].textContent === '' && config.placeholder !== '')
-    ) {
+    if (config.placeholder !== '' && (select.selectedOptions.length === 0 || (select[0].value === '' && select[0].textContent === ''))) {
         let placeholder = document.createElement('span')
         placeholder.classList.add('placeholder')
         placeholder.textContent = config.placeholder
 
         select3.querySelector('span.selected-top')?.remove()
-
         select3.prepend(placeholder)
     }
+
+    select3.append(inner)
 
     select.style.display = 'none'
     select.parentNode.insertBefore(select3, select.nextSibling)
@@ -199,18 +202,12 @@ function Select3_openCloseSelect3(select3, config = {}) {
     }
 }
 
-function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, config) {
+function Select3_appendOptions(select, select3, parent, opt, config) {
 
     let optEl = document.createElement('span')
     optEl.setAttribute('data-value', opt.value.toString())
 
-    // Transfer data- attributes
-    if (Object.keys(opt.dataset).length) {
-        let optDataSet = opt.dataset
-        for (const property in optDataSet) {
-            optEl.setAttribute('data-' + property, optDataSet[property])
-        }
-    }
+    let isMultipleSelect = select.multiple
 
     // Copy selected node for use at the top of select3
     if (opt.selected) {
@@ -218,25 +215,14 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
         let cloneEl = optEl.cloneNode()
         cloneEl.classList.add('selected-top')
 
-        // Format option if special formatting exists, else just fill option with text
-        if (config.formatOptionsFunction !== null) {
-            cloneEl.innerHTML = config.formatOptionsFunction(opt)
+        if (opt.label.length) {
+            cloneEl.textContent = opt.label
         } else {
-            if (opt.label.length) {
-                cloneEl.textContent = opt.label
-            } else {
-                cloneEl.textContent = opt.text
-            }
+            cloneEl.textContent = opt.textContent
         }
 
         if (isMultipleSelect) {
-            let closeBtn = document.createElement('b')
-            closeBtn.classList.add('remove')
-            closeBtn.textContent = '×'
-            closeBtn.addEventListener('click', (e) => {
-                Select3_removeOption(select, select3, e.target.parentElement)
-            })
-            cloneEl.prepend(closeBtn)
+            cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
         }
 
         select3.append(cloneEl)
@@ -247,9 +233,19 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
         optEl.setAttribute('data-selected', '0')
     }
 
+    // Transfer data- attributes
+    if (Object.keys(opt.dataset).length) {
+        let optDataSet = opt.dataset
+        for (const property in optDataSet) {
+            optEl.setAttribute('data-' + property, optDataSet[property])
+        }
+    }
+
     // Format option if special formatting exists, else just fill option with text
     if (config.formatOptionsFunction !== null) {
-         optEl.innerHTML = config.formatOptionsFunction(opt)
+        let content = document.createElement('span')
+        content.append(config.formatOptionsFunction(opt))
+        optEl.innerHTML = content.innerHTML
     } else {
         if (opt.label.length) {
             optEl.textContent = opt.label
@@ -264,9 +260,8 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
 
     optEl.addEventListener('click', (e) => {
 
-        let el = e.target
-        let cloneEl = el.cloneNode()
-        cloneEl.innerHTML = el.innerHTML
+        let cloneEl = optEl.cloneNode()
+        cloneEl.innerHTML = optEl.textContent
         cloneEl.classList.add('selected-top')
 
         // Can only do stuff if the option in the original select is not disabled
@@ -316,12 +311,7 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
                     optEl.classList.remove('selected')
                     optEl.setAttribute('data-selected', '0')
 
-                    if (select.selectedOptions.length === 0 && config.placeholder !== '') {
-                        let placeholder = document.createElement('span')
-                        placeholder.classList.add('placeholder')
-                        placeholder.textContent = config.placeholder
-                        select3.prepend(placeholder)
-                    }
+                    Select3_showPlaceholderIfAppropriate(select, select3, config)
                 } else {
                     select3.insertBefore(cloneEl, select3.querySelector('.inner'))
                     opt.setAttribute('selected', 'selected')
@@ -329,9 +319,7 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
                     optEl.setAttribute('data-selected', '1')
 
                     // Only happens if the option that was just clicked was the first selected option.
-                    if (select.selectedOptions.length === 1) {
-                        select3.querySelector(':scope > span.placeholder')?.remove()
-                    }
+                    select3.querySelector(':scope > span.placeholder')?.remove()
                 }
 
                 // When the maximum allowed amount of options have been selected, add class to select3 to indicate this.
@@ -341,13 +329,7 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
                     select3.classList.remove('maxed')
                 }
 
-                let closeBtn = document.createElement('b')
-                closeBtn.classList.add('remove')
-                closeBtn.textContent = '×'
-                closeBtn.addEventListener('click', (e) => {
-                    Select3_removeOption(select, select3, e.target.parentElement)
-                })
-                cloneEl.prepend(closeBtn)
+                cloneEl.prepend(Select3_getCloseBtn(select, select3,config))
 
                 select.dispatchEvent(new Event('change'))
             }
@@ -360,7 +342,26 @@ function Select3_appendOptions(select, select3, parent, opt, isMultipleSelect, c
     parent.append(optEl)
 }
 
-function Select3_removeOption(select, select3, option) {
+function Select3_showPlaceholderIfAppropriate(select, select3, config) {
+    if (select.selectedOptions.length === 0 && config.placeholder !== '') {
+        let placeholder = document.createElement('span')
+        placeholder.classList.add('placeholder')
+        placeholder.textContent = config.placeholder
+        select3.prepend(placeholder)
+    }
+}
+
+function Select3_getCloseBtn(select, select3, config) {
+    let closeBtn = document.createElement('b')
+    closeBtn.classList.add('remove')
+    closeBtn.textContent = '×'
+    closeBtn.addEventListener('click', (e) => {
+        Select3_removeOption(select, select3, e.target.parentElement, config)
+    })
+    return closeBtn
+}
+
+function Select3_removeOption(select, select3, option, config) {
 
     let value = option.getAttribute('data-value')
     let selectOption = select.querySelector('option[value="' + value + '"]')
@@ -372,6 +373,8 @@ function Select3_removeOption(select, select3, option) {
     select3Option.setAttribute('data-selected', '0')
 
     option.remove()
+
+    Select3_showPlaceholderIfAppropriate(select, select3, config)
 
     // Needed because anytime an option is deselected by clicking on the 'x' in the tags, the <select>'s value is updated.
     select.dispatchEvent(new Event('change'))
@@ -493,4 +496,18 @@ document.addEventListener('click', (e) => {
 
 document.querySelector('#select3').Select3({
     closeOnSelect: false,
+    placeholder: 'ioauefbgn97wa3n9fgn3q0',
+    maximumSelectedOptions: 4,
+    formatOptionsFunction: function(option) {
+        if (option.dataset.img) {
+            let span = document.createElement('span')
+            let image = document.createElement('img')
+            image.src = option.dataset.img
+            span.append(image)
+            span.append(option.textContent)
+            return span
+        } else {
+            return option.textContent
+        }
+    }
 })

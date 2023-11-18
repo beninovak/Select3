@@ -3,5 +3,6 @@
 // TODO --> Consider dynamic option creation? Maybe in a future version...
 // TODO --> Consider wrapping matching search results in <span> to
             enable highlighting the part of options that match the search string
+// TODO --> Consider 'copyDataAttributes' option? Currently it copies by default
 // TODO --> Accessibility ( role 'listbox' for inner, role 'option' for options )
 
