@@ -16,15 +16,6 @@ Element.prototype.Select3 = function(config) {
     // If any options were set, apply them
     config = Select3_applyConfig(config)
 
-
-    // TODO ------------------------------------------
-    // TODO ------------------------------------------
-    // TODO ------------------------------------------
-    // TODO USE <option> label attribute for placeholder???
-    // TODO ------------------------------------------
-    // TODO ------------------------------------------
-    // TODO ------------------------------------------
-
     // TODO --> Consider putting all other functions inside this one
     // TODO --> Check all other TODOs in IDE
 
@@ -122,7 +113,14 @@ Element.prototype.Select3 = function(config) {
     if (select.selectedOptions.length === 0 || (select[0].value === '' && select[0].textContent === '')) {
         let placeholder = document.createElement('span')
         placeholder.classList.add('placeholder')
-        placeholder.textContent = (config.placeholder !== '' ? config.placeholder : '\u00A0')
+
+        let text = (config.placeholder !== '' ? config.placeholder : '\u00A0')
+
+        if (!select.multiple && select[0].label !== '') {
+            text = select[0].label
+        }
+
+        placeholder.textContent = text
         select3.querySelector('span.selected-top')?.remove()
         select3.prepend(placeholder)
     }
@@ -481,24 +479,3 @@ function Select3_initDocumentListener() {
 }
 
 Select3_initDocumentListener()
-
-const sel = document.querySelector('#select3')
-sel.Select3({
-    search: true,
-    searchNoResults: 'Found no matching options',
-    closeOnSelect: false,
-    placeholder: 'Please select an option',
-    maximumSelectedOptions: 4,
-    formatOptionsFunction: function(option) {
-        if (option.dataset.img) {
-            let span = document.createElement('span')
-            let image = document.createElement('img')
-            image.src = option.dataset.img
-            span.append(image)
-            span.append(option.textContent)
-            return span
-        } else {
-            return option.textContent
-        }
-    }
-})
