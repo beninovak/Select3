@@ -477,24 +477,3 @@ function SimpleSelect_initDocumentListener() {
 }
 
 SimpleSelect_initDocumentListener()
-
-const sel = document.querySelector('#select3')
-sel.Select3({
-    search: true,
-    searchNoResults: 'Found no matching options',
-    closeOnSelect: false,
-    placeholder: 'Please select an option placeholder',
-    maximumSelectedOptions: 4,
-    formatOptionsFunction: function(option) {
-        if (option.dataset.img) {
-            let span = document.createElement('span')
-            let image = document.createElement('img')
-            image.src = option.dataset.img
-            span.append(image)
-            span.append(option.textContent)
-            return span
-        } else {
-            return option.textContent
-        }
-    }
-})
