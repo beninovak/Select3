@@ -3,7 +3,7 @@ Element.prototype.Select3 = function(config) {
     const select = this
     if (select.tagName !== 'SELECT') return false
 
-    if (select.hasAttribute('data-select3-initialized') && select.getAttribute('data-select3-initialized') == '1') {
+    if (select.hasAttribute('data-select3-initialized') && select.getAttribute('data-select3-initialized') === '1') {
         if (select.nextSibling?.classList.contains('select3')) {
             select.nextSibling.remove()
         }
@@ -248,7 +248,7 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
         optEl.classList.add('disabled')
     }
 
-    optEl.addEventListener('click', (e) => {
+    optEl.addEventListener('click', () => {
 
         let cloneEl = optEl.cloneNode()
         cloneEl.innerHTML = optEl.textContent
