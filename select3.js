@@ -16,6 +16,15 @@ Element.prototype.Select3 = function(config) {
     // If any options were set, apply them
     config = Select3_applyConfig(config)
 
+
+    // TODO ------------------------------------------
+    // TODO ------------------------------------------
+    // TODO ------------------------------------------
+    // TODO USE <option> label attribute for placeholder???
+    // TODO ------------------------------------------
+    // TODO ------------------------------------------
+    // TODO ------------------------------------------
+
     // TODO --> Consider putting all other functions inside this one
     // TODO --> Check all other TODOs in IDE
 
@@ -83,11 +92,8 @@ Element.prototype.Select3 = function(config) {
     let label = document.querySelector('label[for="' + select.id + '"]')
     if (label !== null) {
         label.addEventListener('click', (e) => {
-            e.stopPropagation()
-            for (let sel3 of document.querySelectorAll('div.select3')) {
-                Select3_closeSelect3(sel3)
-            }
-            Select3_openSelect3(select3, config.dropdownMaxHeight)
+            e.preventDefault()
+            select.open(e)
         })
     }
 
@@ -135,16 +141,12 @@ Element.prototype.Select3 = function(config) {
     }
 
     select.open = function(e = null) {
-        if (e != null) {
-            e.stopPropagation()
-        }
+        e?.stopPropagation()
         Select3_openSelect3(select3, config.dropdownMaxHeight)
     }
 
     select.close = function(e = null) {
-        if (e != null) {
-            e.stopPropagation()
-        }
+        e?.stopPropagation()
         Select3_closeSelect3(select3)
     }
 
@@ -154,14 +156,11 @@ Element.prototype.Select3 = function(config) {
 }
 
 function Select3_openSelect3(select3, configDropdownMaxHeight) {
-
     select3.classList.add('opened')
-
     let inner = select3.querySelector('.inner')
-
     let dropdownMaxHeight = inner.scrollHeight
     dropdownMaxHeight = dropdownMaxHeight > configDropdownMaxHeight ? configDropdownMaxHeight : dropdownMaxHeight
-    inner.style.maxHeight = dropdownMaxHeight + inner.offsetHeight + 'px' // Here inner.offsetHeight is just the combined width of the top and bottom border
+    inner.style.maxHeight = dropdownMaxHeight + 'px' // Here inner.offsetHeight is just the combined width of the top and bottom border
     inner.classList.remove('drop-up')
 
     // Determine whether the options should drop-down or drop-up
@@ -427,15 +426,14 @@ function Select3_applyConfig(config) {
         search: false,
         closeOnSelect: true,
         minimumInputLength: 3,
-        placeholder: '',
-        searchNoResults: '',
         dropdownMaxHeight: 300,
         maximumSelectedOptions: 100,
+        placeholder: '',
+        searchNoResults: '',
         formatOptionsFunction: null,
     }
 
     for (let property in config) {
-
         // If 'options' argument contains a non-supported property, don't add it to 'opts'
         if (confs.hasOwnProperty(property)) {
             // Only add valid properties to opts
@@ -450,26 +448,18 @@ function Select3_applyConfig(config) {
 
 function Select3_isOptionValid(key, value) {
     switch (key) {
+        case 'search':
         case 'closeOnSelect':
             return typeof value === 'boolean'
 
-        case 'search':
-            return typeof value === 'boolean'
-
         case 'minimumInputLength':
-            return typeof value === 'number' && value > 0
-
         case 'dropdownMaxHeight':
-            return typeof value === 'number' && value > 0
-
         case 'maximumSelectedOptions':
             return typeof value === 'number' && value > 0
 
         case 'placeholder':
-            return typeof value === 'string' && value.length > 0 && value.length < 200
-
         case 'searchNoResults':
-            return typeof value === 'string' && value.length > 0 && value.length < 200
+            return typeof value === 'string' && value.length > 0 && value.length < 1000
 
         case 'formatOptionsFunction':
             return typeof value === 'function'
@@ -479,6 +469,7 @@ function Select3_isOptionValid(key, value) {
 function Select3_initDocumentListener() {
     /* Handle closing of select when clicking outside it */
     document.addEventListener('click', (e) => {
+        e.stopPropagation()
         let el = e.target
         let clickedSelect = el.closest('div.select3')
         if (clickedSelect === null) {
@@ -490,3 +481,24 @@ function Select3_initDocumentListener() {
 }
 
 Select3_initDocumentListener()
+
+const sel = document.querySelector('#select3')
+sel.Select3({
+    search: true,
+    searchNoResults: 'Found no matching options',
+    closeOnSelect: false,
+    placeholder: 'Please select an option',
+    maximumSelectedOptions: 4,
+    formatOptionsFunction: function(option) {
+        if (option.dataset.img) {
+            let span = document.createElement('span')
+            let image = document.createElement('img')
+            image.src = option.dataset.img
+            span.append(image)
+            span.append(option.textContent)
+            return span
+        } else {
+            return option.textContent
+        }
+    }
+})
