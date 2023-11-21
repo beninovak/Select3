@@ -1,0 +1,5 @@
+1. Removing with tag with x eats next click
+2. Closing/opening when clicking on select or outside it is a bit wacky ( see example 1 )
+3. maximumSelectedOptions example - some options just don't want to be selected
+4. ---Removing option with x button in tag closes select even with closeOnSelect: false---
+5. dynamic options creation

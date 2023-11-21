@@ -9,12 +9,8 @@ Element.prototype.Select3 = function(config = {}) {
         }
     }
 
-    if (!select.multiple) {
-        config.closeOnSelect = true
-    }
-
     // If any options were set, apply them
-    config = SimpleSelect_applyConfig(config)
+    config = Select3_applyConfig(config)
 
     // TODO --> Rename
     // TODO --> Check all other TODOs in IDE
@@ -29,15 +25,16 @@ Element.prototype.Select3 = function(config = {}) {
     // Handles opening and closing
     select3.addEventListener('click', (e) => {
 
-        const classes = e.target.classList
-        if (classes.contains('select3') || classes.contains('selected-top') || classes.contains('placeholder')) {
+        // If no closest '.inner' exists, the target can only be the select3 itself,
+        // the selected-top option/tags, and the placeholder element
+        if (e.target.closest('.inner') === null) {
 
             let closestSelect3 = e.target.closest('div.select3')
-            SimpleSelect_openCloseSelect3(closestSelect3, config)
+            Select3_openCloseSelect3(closestSelect3, config)
 
             for (let sel3 of document.querySelectorAll('div.select3')) {
                 if (!sel3.isEqualNode(closestSelect3)) {
-                    SimpleSelect_closeSelect3(sel3)
+                    Select3_closeSelect3(sel3)
                 }
             }
         }
@@ -72,7 +69,7 @@ Element.prototype.Select3 = function(config = {}) {
             let searchLength = e.target.value.length
             if (searchLength >= config.minimumInputLength || searchLength < previousSearchLength) {
                 let childNodes = e.target.closest('.inner').querySelectorAll('span:not(.title, .no-results)')
-                SimpleSelect_filterInput(e.target.value, childNodes, select, inner, config)
+                Select3_filterInput(e.target.value, childNodes, select, inner, config)
             }
             previousSearchLength = searchLength
         })
@@ -84,12 +81,13 @@ Element.prototype.Select3 = function(config = {}) {
     label?.addEventListener('click', (e) => {
         e.preventDefault()
         select.open(e)
+        // TODO - maybe toggle instead of just .open()?
     })
 
     for (let child of select.children) {
 
         if (child.tagName === 'OPTION') {
-            SimpleSelect_appendOptions(select, select3, inner, child, config)
+            Select3_appendOptions(select, select3, inner, child, config)
         } else if (child.tagName === 'OPTGROUP') {
 
             let optGroupEl = document.createElement('div')
@@ -102,7 +100,7 @@ Element.prototype.Select3 = function(config = {}) {
             optGroupEl.append(optGroupTitle)
 
             for (let opt of child.children) {
-                SimpleSelect_appendOptions(select, select3, optGroupEl, opt, config)
+                Select3_appendOptions(select, select3, optGroupEl, opt, config)
             }
             inner.append(optGroupEl)
         }
@@ -138,12 +136,16 @@ Element.prototype.Select3 = function(config = {}) {
 
     select.open = function(e = null) {
         e?.stopPropagation()
-        SimpleSelect_openSelect3(select3, config.dropdownMaxHeight)
+        Select3_openSelect3(select3, config.dropdownMaxHeight)
     }
 
     select.close = function(e = null) {
         e?.stopPropagation()
-        SimpleSelect_closeSelect3(select3)
+        Select3_closeSelect3(select3)
+    }
+
+    select.toggle = function() {
+
     }
 
     select.setAttribute('data-select3-initialized', '1')
@@ -151,7 +153,7 @@ Element.prototype.Select3 = function(config = {}) {
     return select
 }
 
-function SimpleSelect_openSelect3(select3, configDropdownMaxHeight) {
+function Select3_openSelect3(select3, configDropdownMaxHeight) {
     select3.classList.add('opened')
     let inner = select3.querySelector('.inner')
     let dropdownMaxHeight = inner.scrollHeight
@@ -166,7 +168,7 @@ function SimpleSelect_openSelect3(select3, configDropdownMaxHeight) {
     }
 }
 
-function SimpleSelect_closeSelect3(select3) {
+function Select3_closeSelect3(select3) {
 
     let inner = select3.querySelector('.inner')
     select3.classList.remove('opened')
@@ -183,17 +185,17 @@ function SimpleSelect_closeSelect3(select3) {
     }
 }
 
-function SimpleSelect_openCloseSelect3(select3, config = {}) {
+function Select3_openCloseSelect3(select3, config = {}) {
     select3.classList.toggle('opened')
 
     if (select3.classList.contains('opened')) {
-        SimpleSelect_openSelect3(select3, config.dropdownMaxHeight)
+        Select3_openSelect3(select3, config.dropdownMaxHeight)
     } else {
-        SimpleSelect_closeSelect3(select3)
+        Select3_closeSelect3(select3)
     }
 }
 
-function SimpleSelect_appendOptions(select, select3, parent, opt, config) {
+function Select3_appendOptions(select, select3, parent, opt, config) {
 
     let optEl = document.createElement('span')
     optEl.setAttribute('data-value', opt.value.toString())
@@ -231,7 +233,7 @@ function SimpleSelect_appendOptions(select, select3, parent, opt, config) {
         cloneEl.textContent = (opt.label.length ? opt.label : opt.textContent)
 
         if (isMultipleSelect) {
-            cloneEl.prepend(SimpleSelect_getCloseBtn(select, select3, config))
+            cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
         }
 
         select3.append(cloneEl)
@@ -299,7 +301,7 @@ function SimpleSelect_appendOptions(select, select3, parent, opt, config) {
                     optEl.classList.remove('selected')
                     optEl.setAttribute('data-selected', '0')
 
-                    SimpleSelect_showPlaceholderIfAppropriate(select, select3, config)
+                    Select3_showPlaceholderIfAppropriate(select, select3, config)
                 } else {
                     select3.insertBefore(cloneEl, select3.querySelector('.inner'))
                     opt.setAttribute('selected', 'selected')
@@ -317,20 +319,20 @@ function SimpleSelect_appendOptions(select, select3, parent, opt, config) {
                     select3.classList.remove('maxed')
                 }
 
-                cloneEl.prepend(SimpleSelect_getCloseBtn(select, select3,config))
+                cloneEl.prepend(Select3_getCloseBtn(select, select3,config))
 
                 select.dispatchEvent(new Event('change'))
             }
 
             if (config.closeOnSelect) {
-                SimpleSelect_closeSelect3(select3, config)
+                Select3_closeSelect3(select3, config)
             }
         }
     })
     parent.append(optEl)
 }
 
-function SimpleSelect_showPlaceholderIfAppropriate(select, select3, config) {
+function Select3_showPlaceholderIfAppropriate(select, select3, config) {
     if (select.selectedOptions.length === 0 && config.placeholder !== '') {
         let placeholder = document.createElement('span')
         placeholder.classList.add('placeholder')
@@ -339,17 +341,19 @@ function SimpleSelect_showPlaceholderIfAppropriate(select, select3, config) {
     }
 }
 
-function SimpleSelect_getCloseBtn(select, select3, config) {
+function Select3_getCloseBtn(select, select3, config) {
     let closeBtn = document.createElement('b')
     closeBtn.classList.add('remove')
     closeBtn.textContent = '×'
     closeBtn.addEventListener('click', (e) => {
-        SimpleSelect_removeOption(select, select3, e.target.parentElement, config)
+        e.stopPropagation() // Needed for multiple select when closeOnSelect is 'false'
+        Select3_removeOption(select, select3, e.target.parentElement, config)
     })
     return closeBtn
 }
 
-function SimpleSelect_removeOption(select, select3, option, config) {
+// TODO - consider using this in other appropriate places - 'data-selected', '0'
+function Select3_removeOption(select, select3, option, config) {
 
     let value = option.getAttribute('data-value')
     let selectOption = select.querySelector('option[value="' + value + '"]')
@@ -362,13 +366,13 @@ function SimpleSelect_removeOption(select, select3, option, config) {
 
     option.remove()
 
-    SimpleSelect_showPlaceholderIfAppropriate(select, select3, config)
+    Select3_showPlaceholderIfAppropriate(select, select3, config)
 
     // Needed because anytime an option is deselected by clicking on the 'x' in the tags, the <select>'s value is updated.
     select.dispatchEvent(new Event('change'))
 }
 
-function SimpleSelect_filterInput(filter, options, select, inner, config) {
+function Select3_filterInput(filter, options, select, inner, config) {
 
     filter = filter.toUpperCase()
 
@@ -415,7 +419,7 @@ function SimpleSelect_filterInput(filter, options, select, inner, config) {
     }
 }
 
-function SimpleSelect_applyConfig(config) {
+function Select3_applyConfig(config) {
 
     /* All possible options and their default values */
     const confs = {
@@ -433,7 +437,7 @@ function SimpleSelect_applyConfig(config) {
         // If 'options' argument contains a non-supported property, don't add it to 'opts'
         if (confs.hasOwnProperty(property)) {
             // Only add valid properties to opts
-            if (SimpleSelect_isOptionValid(property, config[property])) {
+            if (Select3_isOptionValid(property, config[property])) {
                 confs[property] = config[property]
             }
         }
@@ -442,7 +446,7 @@ function SimpleSelect_applyConfig(config) {
     return confs
 }
 
-function SimpleSelect_isOptionValid(key, value) {
+function Select3_isOptionValid(key, value) {
     switch (key) {
         case 'search':
         case 'closeOnSelect':
@@ -462,18 +466,61 @@ function SimpleSelect_isOptionValid(key, value) {
     }
 }
 
-function SimpleSelect_initDocumentListener() {
+function Select3_initDocumentListener() {
     /* Handle closing of select when clicking outside it */
     document.addEventListener('click', (e) => {
         e.stopPropagation()
         let el = e.target
-        let clickedSelect = el.closest('div.select3')
-        if (clickedSelect === null) {
+        if (el.closest('div.select3') === null) {
             for (let select3 of document.querySelectorAll('div.select3')) {
-                SimpleSelect_closeSelect3(select3)
+                Select3_closeSelect3(select3)
             }
         }
     })
 }
 
-SimpleSelect_initDocumentListener()
+Select3_initDocumentListener()
+
+
+// TODO - comment / remove
+const sel = document.querySelector('#select3')
+sel.Select3({
+    search: true,
+    searchNoResults: 'Found no matching options',
+    closeOnSelect: true,
+    placeholder: 'Please select an option placeholder',
+    maximumSelectedOptions: 3,
+    formatOptionsFunction: function(option) {
+        if (option.dataset.img) {
+            let span = document.createElement('span')
+            let image = document.createElement('img')
+            image.src = option.dataset.img
+            span.append(image)
+            span.append(option.textContent)
+            return span
+        } else {
+            return option.textContent
+        }
+    }
+})
+
+const sel2 = document.querySelector('#select3-2')
+sel2.Select3({
+    search: true,
+    searchNoResults: 'Found no matching options',
+    closeOnSelect: false,
+    placeholder: 'Please select an option placeholder',
+    maximumSelectedOptions: 3,
+    formatOptionsFunction: function(option) {
+        if (option.dataset.img) {
+            let span = document.createElement('span')
+            let image = document.createElement('img')
+            image.src = option.dataset.img
+            span.append(image)
+            span.append(option.textContent)
+            return span
+        } else {
+            return option.textContent
+        }
+    }
+})
