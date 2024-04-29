@@ -142,10 +142,25 @@ Element.prototype.Select3 = function(config = {}) {
     select.close = function(e = null) {
         e?.stopPropagation()
         Select3_closeSelect3(select3)
+
+        /* TEST - TODO REMOVE - TEST */
+        setTimeout(() => {
+            console.log('TESTING REMOVAL')
+            Select3_removeOptions(select, select3, config.search)
+        }, 1000)
+        /* TEST - TODO REMOVE - TEST */
     }
 
-    select.toggle = function() {
+    select.toggle = function(e = null) {
 
+    }
+
+    select.appendOptions = function(e = null, options) {
+        // TODO - 'options' should be array with titles/values of options, and optionally the following keys for each option:
+        //              - 'label'
+        //              - 'selected'
+        //              - 'disabled'
+        //              - 'dataset' => array
     }
 
     select.setAttribute('data-select3-initialized', '1')
@@ -192,6 +207,18 @@ function Select3_openCloseSelect3(select3, config = {}) {
         Select3_openSelect3(select3, config.dropdownMaxHeight)
     } else {
         Select3_closeSelect3(select3)
+    }
+}
+
+function Select3_removeOptions(select, select3, hasSearch) {
+    // TODO - remove options from <select> element as well
+    select.value = ''
+    if (hasSearch) {
+        for (let element of select3.querySelector('.inner')?.querySelectorAll(':scope > :not(.search-wrapper)')) {
+            element.remove()
+        }
+    } else {
+        select3.querySelector('.inner')?.children.remove()
     }
 }
 
@@ -347,13 +374,13 @@ function Select3_getCloseBtn(select, select3, config) {
     closeBtn.textContent = '×'
     closeBtn.addEventListener('click', (e) => {
         e.stopPropagation() // Needed for multiple select when closeOnSelect is 'false'
-        Select3_removeOption(select, select3, e.target.parentElement, config)
+        Select3_unselectOption(select, select3, e.target.parentElement, config)
     })
     return closeBtn
 }
 
 // TODO - consider using this in other appropriate places - 'data-selected', '0'
-function Select3_removeOption(select, select3, option, config) {
+function Select3_unselectOption(select, select3, option, config) {
 
     let value = option.getAttribute('data-value')
     let selectOption = select.querySelector('option[value="' + value + '"]')
@@ -470,8 +497,7 @@ function Select3_initDocumentListener() {
     /* Handle closing of select when clicking outside it */
     document.addEventListener('click', (e) => {
         e.stopPropagation()
-        let el = e.target
-        if (el.closest('div.select3') === null) {
+        if (e.target.closest('div.select3') === null) {
             for (let select3 of document.querySelectorAll('div.select3')) {
                 Select3_closeSelect3(select3)
             }
