@@ -80,8 +80,7 @@ Element.prototype.Select3 = function(config = {}) {
     let label = document.querySelector('label[for="' + select.id + '"]')
     label?.addEventListener('click', (e) => {
         e.preventDefault()
-        select.open(e)
-        // TODO - maybe toggle instead of just .open()?
+        select.open(e) // TODO - maybe toggle instead of just .open()?
     })
 
     for (let child of select.children) {
@@ -156,11 +155,12 @@ Element.prototype.Select3 = function(config = {}) {
     }
 
     select.appendOptions = function(e = null, options) {
-        // TODO - 'options' should be array with titles/values of options, and optionally the following keys for each option:
-        //              - 'label'
-        //              - 'selected'
-        //              - 'disabled'
-        //              - 'dataset' => array
+        // TODO - 'options' should be array with
+        //              - 'label' or 'title'  ( regular option or optgroup )
+        //              - 'children' => should contain array of options ( optgroup )
+        //              - 'selected' ( regular option )
+        //              - 'disabled' ( regular option )
+        //              - 'dataset' => array ( regular option )
     }
 
     select.setAttribute('data-select3-initialized', '1')
