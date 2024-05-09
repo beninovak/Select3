@@ -1,4 +1,4 @@
-div.select3 {
+.select3 {
     position: relative;
     cursor: pointer;
     display: inline-flex;
@@ -11,13 +11,17 @@ div.select3 {
     box-sizing: border-box;
 }
 
-div.select3 *,
-div.select3 *::after,
-div.select3 *::before {
+.select3:focus {
+    background: orange;
+}
+
+.select3 *,
+.select3 *::after,
+.select3 *::before {
     box-sizing: inherit;
 }
 
-div.select3::after {
+.select3::after {
     content: '';
     width: 6px;
     height: 6px;
@@ -29,11 +33,11 @@ div.select3::after {
     border-inline-end: 2px solid #000;
 }
 
-div.select3.opened::after {
+.select3.opened::after {
     transform: translateY(-50%) rotateZ(225deg);
 }
 
-div.select3.opened {
+.select3.opened {
     overflow: visible;
 }
 

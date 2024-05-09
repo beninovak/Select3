@@ -9,6 +9,8 @@ Element.prototype.Select3 = function(config = {}) {
         }
     }
 
+    select.setAttribute('tab-index', '-1')
+
     // If any options were set, apply them
     config = Select3_applyConfig(config)
 
@@ -24,7 +26,13 @@ Element.prototype.Select3 = function(config = {}) {
 
     let select3 = document.createElement('div')
     select3.classList.add('select3')
-    select3.setAttribute('tax-index', '0')
+    select3.setAttribute('tab-index', '0')
+
+
+    // TODO - CONTINUE HERE AND REMOVE AFTER
+    select3.addEventListener('focus', () => {
+        console.log('oanfoaef')
+    })
 
     for (let cssClass of select.classList) {
         select3.classList.add(cssClass)
@@ -85,10 +93,9 @@ Element.prototype.Select3 = function(config = {}) {
         inner.prepend(searchWrapper)
     }
 
-    let label = document.querySelector('label[for="' + select.id + '"]')
-    label?.addEventListener('click', (e) => {
+    document.querySelector('label[for="' + select.id + '"]')?.addEventListener('click', (e) => {
         e.preventDefault()
-        select.open(e) // TODO - maybe toggle instead of just .open()?
+        select.open(e) // TODO - maybe toggle instead of just .open()?...maybe not tho
     })
 
     for (let child of select.children) {
@@ -179,10 +186,7 @@ Element.prototype.Select3 = function(config = {}) {
 }
 
 function Select3_openSelect3(select3, configDropdownMaxHeight) {
-    // select3.addEventListener('focus', () => {
-    //     console.log('oanfoaef')
-    // })
-    select3.focus()
+    // select3.focus()
     select3.classList.add('opened')
     select3.setAttribute('data-opened', '1')
     let inner = select3.querySelector('.inner')
@@ -227,7 +231,7 @@ function Select3_openCloseSelect3(select3, config = {}) {
 }
 
 function Select3_initEvents(select3, config) {
-    const SPACEBAR_KEY_CODE = 32/*[0,32]*/
+    const SPACEBAR_KEY_CODE = 32
     const ENTER_KEY_CODE = 13
     const DOWN_ARROW_KEY_CODE = 40
     const UP_ARROW_KEY_CODE = 38
@@ -591,23 +595,30 @@ sel.Select3({
     }
 })
 
-const sel2 = document.querySelector('#select3-2')
-sel2.Select3({
-    search: true,
-    searchNoResults: 'Found no matching options',
-    closeOnSelect: false,
-    placeholder: 'Please select an option placeholder',
-    maximumSelectedOptions: 3,
-    formatOptionsFunction: function(option) {
-        if (option.dataset.img) {
-            let span = document.createElement('span')
-            let image = document.createElement('img')
-            image.src = option.dataset.img
-            span.append(image)
-            span.append(option.textContent)
-            return span
-        } else {
-            return option.textContent
-        }
+// const sel2 = document.querySelector('#select3-2')
+// sel2.Select3({
+//     search: true,
+//     searchNoResults: 'Found no matching options',
+//     closeOnSelect: false,
+//     placeholder: 'Please select an option placeholder',
+//     maximumSelectedOptions: 3,
+//     formatOptionsFunction: function(option) {
+//         if (option.dataset.img) {
+//             let span = document.createElement('span')
+//             let image = document.createElement('img')
+//             image.src = option.dataset.img
+//             span.append(image)
+//             span.append(option.textContent)
+//             return span
+//         } else {
+//             return option.textContent
+//         }
+//     }
+// })
+
+
+document.addEventListener('keydown', (e) => {
+    if (e.keyCode === 9) {
+        console.log(document.activeElement)
     }
 })

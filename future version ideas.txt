@@ -1,7 +1,4 @@
-// TODO --> Consider adding on option which would allow the user to specify HTMl ( or better yet a class?? )
-            to be shown if a certain number of options have been selected on multiple select
 // TODO --> Consider wrapping matching search results in <span> to
             enable highlighting the part of options that match the search string
 // TODO --> Consider 'copyDataAttributes' option? Currently, it copies by default
-// TODO --> Accessibility ( role 'listbox' for inner, role 'option' for options )
-// TODO --> on open/close events, on select
+// TODO --> Accessibility ( role 'listbox' for inner, role 'option' for options )...just use <menu> and <li> instead???
