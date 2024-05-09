@@ -18,7 +18,7 @@ Element.prototype.Select3 = function(config = {}) {
         config.maximumSelectedOptions = select.selectedOptions.length
     }
 
-    console.table(config)
+    // console.table(config)
     // TODO --> Rename
     // TODO --> Check all other TODOs in IDE
 
@@ -179,7 +179,12 @@ Element.prototype.Select3 = function(config = {}) {
 }
 
 function Select3_openSelect3(select3, configDropdownMaxHeight) {
+    // select3.addEventListener('focus', () => {
+    //     console.log('oanfoaef')
+    // })
+    select3.focus()
     select3.classList.add('opened')
+    select3.setAttribute('data-opened', '1')
     let inner = select3.querySelector('.inner')
     let dropdownMaxHeight = inner.scrollHeight
     dropdownMaxHeight = dropdownMaxHeight > configDropdownMaxHeight ? configDropdownMaxHeight : dropdownMaxHeight
@@ -197,6 +202,7 @@ function Select3_closeSelect3(select3) {
 
     let inner = select3.querySelector('.inner')
     select3.classList.remove('opened')
+    select3.setAttribute('data-opened', '0')
     inner.style.maxHeight =  '0px'
 
     if (select3.querySelector('input.search') !== null) {
@@ -227,26 +233,43 @@ function Select3_initEvents(select3, config) {
     const UP_ARROW_KEY_CODE = 38
     const ESCAPE_KEY_CODE = 27
 
+    const options = select3.querySelectorAll('.inner span[data-value]:not(.disabled)')
+
+    let focusedIndex = 0
+    options[focusedIndex].classList.add('focused')
+
     select3.addEventListener('keydown', (e) => {
         switch(e.keyCode) {
             case SPACEBAR_KEY_CODE:
+                e.preventDefault() // Prevents scrolling down of list
                 Select3_openSelect3(select3, config.dropdownMaxHeight)
-                break;
+                break
 
             case ESCAPE_KEY_CODE:
                 Select3_closeSelect3(select3)
-                break;
+                break
 
             case UP_ARROW_KEY_CODE:
-                break;
+                if (focusedIndex > 0) {
+                    options[focusedIndex].classList.remove('focused')
+                    focusedIndex--
+                    options[focusedIndex].classList.add('focused')
+                }
+                break
 
             case DOWN_ARROW_KEY_CODE:
-                break;
+                if (focusedIndex < options.length - 1) {
+                    options[focusedIndex].classList.remove('focused')
+                    focusedIndex++
+                    options[focusedIndex].classList.add('focused')
+                }
+                break
 
             case ENTER_KEY_CODE:
-                // select option here
-                Select3_closeSelect3(select3)
-                break;
+                if (select3.getAttribute('data-opened') === '1') {
+                    options[focusedIndex].dispatchEvent(new Event('click'))
+                }
+                break
         }
     })
 }
@@ -358,9 +381,6 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
                 optEl.classList.add('selected')
                 optEl.setAttribute('data-selected', '1')
 
-                // Trigger 'change' event on regular select only if option is not already selected.
-                select.dispatchEvent(new Event('change'))
-
             } else if (isMultipleSelect) {
 
                 if (isOptionAlreadySelected) {
@@ -380,17 +400,18 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
                     select3.querySelector(':scope > span.placeholder')?.remove()
                 }
 
+                console.log(select.selectedOptions.length)
                 // When the maximum allowed amount of options have been selected, add class to select3 to indicate this.
-                if (select.selectedOptions.length === config.maximumSelectedOptions) {
+                if (select.selectedOptions.length >= config.maximumSelectedOptions) {
                     select3.classList.add('maxed')
                 } else {
                     select3.classList.remove('maxed')
                 }
-
-                cloneEl.prepend(Select3_getCloseBtn(select, select3,config))
-
-                select.dispatchEvent(new Event('change'))
+                cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
             }
+
+            // Trigger 'change' event on regular select only if option is not already selected.
+            select.dispatchEvent(new Event('change'))
 
             if (config.closeOnSelect) {
                 Select3_closeSelect3(select3, config)
@@ -546,8 +567,7 @@ function Select3_initDocumentListener() {
     })
 }
 
-Select3_initDocumentListener()
-
+Select3_initDocumentListener() // TODO Should be last line in file
 
 // TODO - comment / remove
 const sel = document.querySelector('#select3')
@@ -571,23 +591,23 @@ sel.Select3({
     }
 })
 
-// const sel2 = document.querySelector('#select3-2')
-// sel2.Select3({
-//     search: true,
-//     searchNoResults: 'Found no matching options',
-//     closeOnSelect: false,
-//     placeholder: 'Please select an option placeholder',
-//     maximumSelectedOptions: 2,
-//     formatOptionsFunction: function(option) {
-//         if (option.dataset.img) {
-//             let span = document.createElement('span')
-//             let image = document.createElement('img')
-//             image.src = option.dataset.img
-//             span.append(image)
-//             span.append(option.textContent)
-//             return span
-//         } else {
-//             return option.textContent
-//         }
-//     }
-// })
+const sel2 = document.querySelector('#select3-2')
+sel2.Select3({
+    search: true,
+    searchNoResults: 'Found no matching options',
+    closeOnSelect: false,
+    placeholder: 'Please select an option placeholder',
+    maximumSelectedOptions: 3,
+    formatOptionsFunction: function(option) {
+        if (option.dataset.img) {
+            let span = document.createElement('span')
+            let image = document.createElement('img')
+            image.src = option.dataset.img
+            span.append(image)
+            span.append(option.textContent)
+            return span
+        } else {
+            return option.textContent
+        }
+    }
+})

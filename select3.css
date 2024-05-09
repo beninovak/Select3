@@ -139,6 +139,10 @@ div.select3.opened {
     background: #e0e0e0;
 }
 
+.select3 .inner span:not(.title).focused {
+    background: #eae6e6;
+}
+
 .select3 .inner span.disabled {
     opacity: 0.7;
     background: #c0c0c0;
