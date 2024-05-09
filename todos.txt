@@ -1,6 +1,6 @@
-1. if maxSelectedOptions is smaller than current selected options, maxSelectedOptions will be raised to that number
-
+// 1. if maxSelectedOptions is smaller than current selected options, maxSelectedOptions will be raised to that number
 2. AJAX search - function should construct <option> elements and add them to <select> element as well
 3. Keyboard support - check <select> element controls and copy them
 4. Events - on close, on open, on select, on deselect ( maybe also on pill button deselect ??? ), on options cap hit ( max options selected ), on ajaxSearch, on init, on destroy ( if destroy function will exist )
 5. Check if you could append array of options to an empty select with no options
+6. Dynamic option creation

@@ -12,11 +12,19 @@ Element.prototype.Select3 = function(config = {}) {
     // If any options were set, apply them
     config = Select3_applyConfig(config)
 
+    // console.table(config)
+
+    if (select.selectedOptions.length > config.maximumSelectedOptions) {
+        config.maximumSelectedOptions = select.selectedOptions.length
+    }
+
+    console.table(config)
     // TODO --> Rename
     // TODO --> Check all other TODOs in IDE
 
     let select3 = document.createElement('div')
     select3.classList.add('select3')
+    select3.setAttribute('tax-index', '0')
 
     for (let cssClass of select.classList) {
         select3.classList.add(cssClass)
@@ -163,6 +171,8 @@ Element.prototype.Select3 = function(config = {}) {
         //              - 'dataset' => array ( regular option )
     }
 
+    Select3_initEvents(select3, config)
+
     select.setAttribute('data-select3-initialized', '1')
 
     return select
@@ -208,6 +218,37 @@ function Select3_openCloseSelect3(select3, config = {}) {
     } else {
         Select3_closeSelect3(select3)
     }
+}
+
+function Select3_initEvents(select3, config) {
+    const SPACEBAR_KEY_CODE = 32/*[0,32]*/
+    const ENTER_KEY_CODE = 13
+    const DOWN_ARROW_KEY_CODE = 40
+    const UP_ARROW_KEY_CODE = 38
+    const ESCAPE_KEY_CODE = 27
+
+    select3.addEventListener('keydown', (e) => {
+        switch(e.keyCode) {
+            case SPACEBAR_KEY_CODE:
+                Select3_openSelect3(select3, config.dropdownMaxHeight)
+                break;
+
+            case ESCAPE_KEY_CODE:
+                Select3_closeSelect3(select3)
+                break;
+
+            case UP_ARROW_KEY_CODE:
+                break;
+
+            case DOWN_ARROW_KEY_CODE:
+                break;
+
+            case ENTER_KEY_CODE:
+                // select option here
+                Select3_closeSelect3(select3)
+                break;
+        }
+    })
 }
 
 function Select3_removeOptions(select, select3, hasSearch) {
@@ -530,23 +571,23 @@ sel.Select3({
     }
 })
 
-const sel2 = document.querySelector('#select3-2')
-sel2.Select3({
-    search: true,
-    searchNoResults: 'Found no matching options',
-    closeOnSelect: false,
-    placeholder: 'Please select an option placeholder',
-    maximumSelectedOptions: 3,
-    formatOptionsFunction: function(option) {
-        if (option.dataset.img) {
-            let span = document.createElement('span')
-            let image = document.createElement('img')
-            image.src = option.dataset.img
-            span.append(image)
-            span.append(option.textContent)
-            return span
-        } else {
-            return option.textContent
-        }
-    }
-})
+// const sel2 = document.querySelector('#select3-2')
+// sel2.Select3({
+//     search: true,
+//     searchNoResults: 'Found no matching options',
+//     closeOnSelect: false,
+//     placeholder: 'Please select an option placeholder',
+//     maximumSelectedOptions: 2,
+//     formatOptionsFunction: function(option) {
+//         if (option.dataset.img) {
+//             let span = document.createElement('span')
+//             let image = document.createElement('img')
+//             image.src = option.dataset.img
+//             span.append(image)
+//             span.append(option.textContent)
+//             return span
+//         } else {
+//             return option.textContent
+//         }
+//     }
+// })
