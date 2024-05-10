@@ -28,18 +28,15 @@ Element.prototype.Select3 = function(config = {}) {
     select3.classList.add('select3')
     select3.setAttribute('tab-index', '0')
 
-
-    // TODO - CONTINUE HERE AND REMOVE AFTER
-    select3.addEventListener('focus', () => {
-        console.log('oanfoaef')
-    })
-
     for (let cssClass of select.classList) {
         select3.classList.add(cssClass)
     }
 
     // Handles opening and closing
     select3.addEventListener('click', (e) => {
+
+        // select3.focus();
+        select3.querySelector('.inner')?.focus();
 
         // If no closest '.inner' exists, the target can only be the select3 itself,
         // the selected-top option/tags, and the placeholder element
@@ -254,7 +251,7 @@ function Select3_initEvents(select3, config) {
                 break
 
             case UP_ARROW_KEY_CODE:
-                if (focusedIndex > 0) {
+                if (select3.getAttribute('data-opened') === '1' && focusedIndex > 0) {
                     options[focusedIndex].classList.remove('focused')
                     focusedIndex--
                     options[focusedIndex].classList.add('focused')
@@ -262,7 +259,7 @@ function Select3_initEvents(select3, config) {
                 break
 
             case DOWN_ARROW_KEY_CODE:
-                if (focusedIndex < options.length - 1) {
+                if (select3.getAttribute('data-opened') === '1' && focusedIndex < options.length - 1) {
                     options[focusedIndex].classList.remove('focused')
                     focusedIndex++
                     options[focusedIndex].classList.add('focused')
@@ -576,7 +573,7 @@ Select3_initDocumentListener() // TODO Should be last line in file
 // TODO - comment / remove
 const sel = document.querySelector('#select3')
 sel.Select3({
-    search: true,
+    search: false,
     searchNoResults: 'Found no matching options',
     closeOnSelect: true,
     placeholder: 'Please select an option placeholder',
@@ -615,10 +612,3 @@ sel.Select3({
 //         }
 //     }
 // })
-
-
-document.addEventListener('keydown', (e) => {
-    if (e.keyCode === 9) {
-        console.log(document.activeElement)
-    }
-})
