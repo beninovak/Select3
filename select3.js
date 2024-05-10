@@ -35,8 +35,8 @@ Element.prototype.Select3 = function(config = {}) {
     // Handles opening and closing
     select3.addEventListener('click', (e) => {
 
-        // select3.focus();
-        select3.querySelector('.inner')?.focus();
+        // select3.focus()
+        select3.querySelector('.inner')?.focus()
 
         // If no closest '.inner' exists, the target can only be the select3 itself,
         // the selected-top option/tags, and the placeholder element
@@ -92,7 +92,7 @@ Element.prototype.Select3 = function(config = {}) {
 
     document.querySelector('label[for="' + select.id + '"]')?.addEventListener('click', (e) => {
         e.preventDefault()
-        select.open(e) // TODO - maybe toggle instead of just .open()?...maybe not tho
+        select.open(e)
     })
 
     for (let child of select.children) {
@@ -163,16 +163,72 @@ Element.prototype.Select3 = function(config = {}) {
     }
 
     select.toggle = function(e = null) {
-
+        if (select3.getAttribute('data-opened') === '1') {
+            select.close(e)
+        } else {
+            select.open(e)
+        }
     }
 
-    select.appendOptions = function(e = null, options) {
+    select.appendOptions = function(options, e = null) { // TODO - asses the 'e' argument...is it necessary?
+        if (!Array.isArray(options)) return
+
+        const optionDefaults = {
+            textContent: '',
+            label: '',
+            value: '',
+            selected: false,
+            disabled: false,
+            dataset: [],
+            children: [],
+        }
+
         // TODO - 'options' should be array with
-        //              - 'label' or 'title'  ( regular option or optgroup )
-        //              - 'children' => should contain array of options ( optgroup )
-        //              - 'selected' ( regular option )
-        //              - 'disabled' ( regular option )
-        //              - 'dataset' => array ( regular option )
+        //      - 'label' or 'textContent' ( regular option or optgroup ) - required
+        //      - 'value' - required
+        //      - 'children' => should contain array of options ( optgroup )
+        //      - 'selected' ( regular option )
+        //      - 'disabled' ( regular option )
+        //      - 'dataset' => array ( regular option )
+        //      - 'optgroup' option to specify which optgroup the option should be appended to...maybe?
+
+        // TODO - also add the options to <select> element
+
+        for (const option of options) {
+            if (!option.hasOwnProperty('value') || !Select3_isOptionValid('value', option.value)) {
+                continue
+            }
+            let optionConfig = optionDefaults;
+
+            for (const property in option) {
+                // If 'options' argument contains a non-supported property, ignore it
+                if (optionDefaults.hasOwnProperty(property)) {
+                    // Only add valid properties to optionDefaults
+                    if (Select3_isOptionValid(property, option[property])) {
+                        optionConfig[property] = option[property]
+                    }
+                }
+            }
+            console.table(optionConfig)
+
+            // TODO - CONTINUE HERE ( new options can't be selected )
+            // TODO - Try new options with 'selected' and 'disabled' set to true
+            if (optionConfig.children.length === 0) {
+                console.log(optionConfig)
+                Select3_appendOptions(select, select3, inner, optionConfig, config)
+            } else {
+                let optGroupEl = document.createElement('div')
+                optGroupEl.classList.add('optgroup')
+
+                let optGroupTitle = document.createElement('span')
+                optGroupTitle.classList.add('title')
+                optGroupTitle.textContent = optionConfig.label
+
+                optGroupEl.append(optGroupTitle)
+
+                Select3_appendOptions(select, select3, optGroupEl, optionConfig, config)
+            }
+        }
     }
 
     Select3_initEvents(select3, config)
@@ -512,7 +568,7 @@ function Select3_filterInput(filter, options, select, inner, config) {
 function Select3_applyConfig(config) {
 
     /* All possible options and their default values */
-    const confs = {
+    const defaultConfig = {
         search: false,
         closeOnSelect: true,
         minimumInputLength: 3,
@@ -524,20 +580,23 @@ function Select3_applyConfig(config) {
     }
 
     for (let property in config) {
-        // If 'options' argument contains a non-supported property, don't add it to 'opts'
-        if (confs.hasOwnProperty(property)) {
-            // Only add valid properties to opts
+        // If 'config' argument contains a non-supported property, ignore it
+        if (defaultConfig.hasOwnProperty(property)) {
+            // Only add valid properties to defaultConfig
             if (Select3_isOptionValid(property, config[property])) {
-                confs[property] = config[property]
+                defaultConfig[property] = config[property]
             }
         }
     }
 
-    return confs
+    return defaultConfig
 }
 
 function Select3_isOptionValid(key, value) {
     switch (key) {
+
+        case 'selected': // for options object
+        case 'disabled': // for options object
         case 'search':
         case 'closeOnSelect':
             return typeof value === 'boolean'
@@ -547,9 +606,17 @@ function Select3_isOptionValid(key, value) {
         case 'maximumSelectedOptions':
             return typeof value === 'number' && value > 0
 
+
+        case 'label': // for options object
+        case 'value': // for options object
+        case 'textContent': // for options object
         case 'placeholder':
         case 'searchNoResults':
             return typeof value === 'string' && value.length > 0 && value.length < 1000
+
+        case 'dataset':  // for options object
+        case 'children': // for options object
+            return Array.isArray(value)
 
         case 'formatOptionsFunction':
             return typeof value === 'function'
@@ -591,6 +658,28 @@ sel.Select3({
         }
     }
 })
+
+setTimeout(() => {
+    const options = [
+        {
+            textContent: 'Appended option 1',
+            value: 'some_value',
+            selected: false,
+            disabled: false,
+            // dataset: [1, 2, 3],
+            // children: [4, 5, 6],
+        },
+        {
+            textContent: 'Appended option 2',
+            value: 'another value',
+            selected: false,
+            disabled: false,
+            // dataset: ["123", 431, false],
+            // children: [555, true, "sge"],
+        },
+    ];
+    sel.appendOptions(options)
+}, 1000)
 
 // const sel2 = document.querySelector('#select3-2')
 // sel2.Select3({

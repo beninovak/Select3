@@ -12,11 +12,15 @@
 
     <label for="test">TEST SELECT</label>
     <select name="test" id="test" style="margin-bottom: 100px;">
-        <option>OPTION 1</option>
-        <option>OPTION 2</option>
-        <option disabled>OPTION 3</option>
-        <option>OPTION 4</option>
-        <option>OPTION 5</option>
+        <optgroup label="group 1">
+            <option>OPTION 1</option>
+            <option>OPTION 2</option>
+        </optgroup>
+        <optgroup disabled label="group 2">
+            <option>OPTION 3</option>
+            <option>OPTION 4</option>
+            <option>OPTION 5</option>
+        </optgroup>
     </select>
 
     <form action="" method="get" id="test-form-1">
