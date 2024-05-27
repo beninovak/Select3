@@ -185,20 +185,18 @@ Element.prototype.Select3 = function(config = {}) {
 
         // TODO - 'options' should be array with
         //      - 'label' or 'textContent' ( regular option or optgroup ) - required
-        //      - 'value' - required
-        //      - 'children' => should contain array of options ( optgroup )
+        //      - 'value' - required ( only for regular option )
         //      - 'selected' ( regular option )
         //      - 'disabled' ( regular option )
         //      - 'dataset' => array ( regular option )
+        //      - 'children' => should contain array of options ( optgroup )
         //      - 'optgroup' option to specify which optgroup the option should be appended to...maybe?
 
         // TODO - also add the options to <select> element
 
         for (const option of options) {
-            if (!option.hasOwnProperty('value') || !Select3_isOptionValid('value', option.value)) {
-                continue
-            }
-            let optionConfig = optionDefaults;
+            if (option.children?.length === 0 && (!option.hasOwnProperty('value') || !Select3_isOptionValid('value', option.value))) continue // Only do the value check on regular options and not optgroups
+            let optionConfig = optionDefaults
 
             for (const property in option) {
                 // If 'options' argument contains a non-supported property, ignore it
@@ -209,24 +207,48 @@ Element.prototype.Select3 = function(config = {}) {
                     }
                 }
             }
-            console.table(optionConfig)
 
-            // TODO - CONTINUE HERE ( new options can't be selected )
+            // console.table(optionConfig)
+
+            // TODO - CONTINUE HERE ( new options can be selected, but don't actually change the value of <select> )
             // TODO - Try new options with 'selected' and 'disabled' set to true
             if (optionConfig.children.length === 0) {
-                console.log(optionConfig)
-                Select3_appendOptions(select, select3, inner, optionConfig, config)
+                let newOption = document.createElement('option')
+                for (const property in optionConfig) {
+                    newOption[property] = optionConfig[property]
+                }
+                select.append(newOption)
+                Select3_appendOptions(select, select3, inner, newOption, config)
             } else {
+                let newOptGroup = document.createElement('optgroup')
+                newOptGroup.label = optionConfig.label
                 let optGroupEl = document.createElement('div')
                 optGroupEl.classList.add('optgroup')
-
                 let optGroupTitle = document.createElement('span')
                 optGroupTitle.classList.add('title')
                 optGroupTitle.textContent = optionConfig.label
-
                 optGroupEl.append(optGroupTitle)
 
-                Select3_appendOptions(select, select3, optGroupEl, optionConfig, config)
+                for (const childOption of option.children) {
+                    for (const property in childOption) {
+                        // If 'options' argument contains a non-supported property, ignore it
+                        if (optionDefaults.hasOwnProperty(property)) {
+                            // Only add valid properties to optionDefaults
+                            if (Select3_isOptionValid(property, childOption[property])) {
+                                optionConfig[property] = childOption[property]
+                            }
+                        }
+                    }
+
+                    let newOption = document.createElement('option')
+                    for (const property in optionConfig) {
+                        newOption[property] = optionConfig[property]
+                    }
+                    newOptGroup.append(newOption)
+                    Select3_appendOptions(select, select3, optGroupEl, newOption, config)
+                }
+                select.append(newOptGroup)
+                inner.append(optGroupEl)
             }
         }
     }
@@ -374,17 +396,14 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
 
     // Copy selected node for use at the top of select3
     if (opt.selected) {
-
-        let cloneEl = optEl.cloneNode()
-        cloneEl.classList.add('selected-top')
-
-        cloneEl.textContent = (opt.label.length ? opt.label : opt.textContent)
+        optEl.classList.add('selected-top')
+        optEl.textContent = (opt.label.length ? opt.label : opt.textContent)
 
         if (isMultipleSelect) {
-            cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
+            optEl.prepend(Select3_getCloseBtn(select, select3, config))
         }
 
-        select3.append(cloneEl)
+        select3.prepend(optEl)
 
         optEl.classList.add('selected')
         optEl.setAttribute('data-selected', '1')
@@ -398,81 +417,76 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
 
     optEl.addEventListener('click', () => {
 
+        // Can only do stuff if the option in the original select is not disabled
+        // Or if user selects an option, whilst already having max selected options
+        if (opt.disabled || select.selectedOptions.length >= config.maximumSelectedOptions && optEl.getAttribute('data-selected') === '0') return
+
         let cloneEl = optEl.cloneNode()
         cloneEl.innerHTML = optEl.textContent // TODO -- check this shenanigans...why even use cloneEl??
         cloneEl.classList.add('selected-top')
 
-        // Can only do stuff if the option in the original select is not disabled
-        if (!opt.disabled) {
+        let isOptionAlreadySelected = false
 
-            // If user selects an option, whilst already having max selected options
-            if (select.selectedOptions.length >= config.maximumSelectedOptions && optEl.getAttribute('data-selected') === '0') {
-                return
+        if (
+            (!isMultipleSelect && select.val() === cloneEl.getAttribute('data-value')) ||
+            (isMultipleSelect && select.val().includes(cloneEl.getAttribute('data-value')))
+        ) {
+            isOptionAlreadySelected = true
+        }
+
+        // Handle selecting/deselecting
+        if (!isMultipleSelect && !isOptionAlreadySelected) {
+
+            let children = select.querySelectorAll('option')
+            for (let child of children) {
+                child.removeAttribute('selected')
             }
 
-            let isOptionAlreadySelected = false
-
-            if (
-                (!isMultipleSelect && select.val() === cloneEl.getAttribute('data-value')) ||
-                (isMultipleSelect && select.val().includes(cloneEl.getAttribute('data-value')))
-            ) {
-                isOptionAlreadySelected = true
+            let select3Children = select3.querySelectorAll('.inner span')
+            for (let child of select3Children) {
+                child.classList.remove('selected')
+                child.setAttribute('data-selected', '0')
             }
 
-            // Handle selecting/deselecting
-            if (!isMultipleSelect && !isOptionAlreadySelected) {
+            opt.setAttribute('selected', 'selected')
+            select3.querySelector('.selected-top, .placeholder').replaceWith(cloneEl)
+            optEl.classList.add('selected')
+            optEl.setAttribute('data-selected', '1')
 
-                let children = select.querySelectorAll('option')
-                for (let child of children) {
-                    child.removeAttribute('selected')
-                }
+        } else if (isMultipleSelect) {
 
-                let select3Children = select3.querySelectorAll('.inner span')
-                for (let child of select3Children) {
-                    child.classList.remove('selected')
-                    child.setAttribute('data-selected', '0')
-                }
+            if (isOptionAlreadySelected) {
+                select3.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]')?.remove()
+                opt.removeAttribute('selected')
+                optEl.classList.remove('selected')
+                optEl.setAttribute('data-selected', '0')
 
+                Select3_showPlaceholderIfAppropriate(select, select3, config)
+            } else {
+                select3.insertBefore(cloneEl, select3.querySelector('.inner'))
                 opt.setAttribute('selected', 'selected')
-                select3.querySelector('.selected-top, .placeholder').replaceWith(cloneEl)
                 optEl.classList.add('selected')
                 optEl.setAttribute('data-selected', '1')
 
-            } else if (isMultipleSelect) {
-
-                if (isOptionAlreadySelected) {
-                    select3.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]')?.remove()
-                    opt.removeAttribute('selected')
-                    optEl.classList.remove('selected')
-                    optEl.setAttribute('data-selected', '0')
-
-                    Select3_showPlaceholderIfAppropriate(select, select3, config)
-                } else {
-                    select3.insertBefore(cloneEl, select3.querySelector('.inner'))
-                    opt.setAttribute('selected', 'selected')
-                    optEl.classList.add('selected')
-                    optEl.setAttribute('data-selected', '1')
-
-                    // Only happens if the option that was just clicked was the first selected option.
-                    select3.querySelector(':scope > span.placeholder')?.remove()
-                }
-
-                console.log(select.selectedOptions.length)
-                // When the maximum allowed amount of options have been selected, add class to select3 to indicate this.
-                if (select.selectedOptions.length >= config.maximumSelectedOptions) {
-                    select3.classList.add('maxed')
-                } else {
-                    select3.classList.remove('maxed')
-                }
-                cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
+                // Only happens if the option that was just clicked was the first selected option.
+                select3.querySelector(':scope > span.placeholder')?.remove()
             }
 
-            // Trigger 'change' event on regular select only if option is not already selected.
-            select.dispatchEvent(new Event('change'))
-
-            if (config.closeOnSelect) {
-                Select3_closeSelect3(select3, config)
+            console.log(select.selectedOptions.length)
+            // When the maximum allowed amount of options has been selected, add class to select3 to indicate this.
+            if (select.selectedOptions.length >= config.maximumSelectedOptions) {
+                select3.classList.add('maxed')
+            } else {
+                select3.classList.remove('maxed')
             }
+            cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
+        }
+
+        // Trigger 'change' event on regular select only if option is not already selected. TODO - check if this is true
+        select.dispatchEvent(new Event('change'))
+
+        if (config.closeOnSelect) {
+            Select3_closeSelect3(select3, config)
         }
     })
     parent.append(optEl)
@@ -662,22 +676,32 @@ sel.Select3({
 setTimeout(() => {
     const options = [
         {
-            textContent: 'Appended option 1',
-            value: 'some_value',
-            selected: false,
-            disabled: false,
+            label: 'Optgroup title 1',
+            children: [
+                {
+                    textContent: 'Child option 1',
+                    value: 'some_value_1',
+                },
+                {
+                    textContent: 'Child option 2',
+                    value: 'some_value_2',
+                },
+                {
+                    textContent: 'Child option 3',
+                    value: 'some_value_3',
+                },
+            ],
             // dataset: [1, 2, 3],
-            // children: [4, 5, 6],
         },
-        {
-            textContent: 'Appended option 2',
-            value: 'another value',
-            selected: false,
-            disabled: false,
-            // dataset: ["123", 431, false],
-            // children: [555, true, "sge"],
-        },
-    ];
+        // {
+        //     textContent: 'Appended option 2',
+        //     value: 'another value',
+        //     selected: false,
+        //     disabled: false,
+        //     // dataset: ["123", 431, false],
+        //     // children: [555, true, "sge"],
+        // },
+    ]
     sel.appendOptions(options)
 }, 1000)
 
