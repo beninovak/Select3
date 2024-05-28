@@ -10,35 +10,35 @@
 
 <div class="main">
 
-    <label for="test">TEST SELECT</label>
-    <select name="test" id="test" style="margin-bottom: 100px;">
-        <optgroup label="group 1">
-            <option>OPTION 1</option>
-            <option>OPTION 2</option>
-        </optgroup>
-        <optgroup disabled label="group 2">
-            <option>OPTION 3</option>
-            <option>OPTION 4</option>
-            <option>OPTION 5</option>
-        </optgroup>
-    </select>
+<!--    <label for="test">TEST SELECT</label>-->
+<!--    <select name="test" id="test" style="margin-bottom: 100px;">-->
+<!--        <optgroup label="group 1">-->
+<!--            <option>OPTION 1</option>-->
+<!--            <option>OPTION 2</option>-->
+<!--        </optgroup>-->
+<!--        <optgroup disabled label="group 2">-->
+<!--            <option>OPTION 3</option>-->
+<!--            <option>OPTION 4</option>-->
+<!--            <option>OPTION 5</option>-->
+<!--        </optgroup>-->
+<!--    </select>-->
 
     <form action="" method="get" id="test-form-1">
 <!--        <input type="hidden" name="hp" value="test_123"/>-->
 <!--        <input type="hidden" name="test" value="some value"/>-->
 
         <label for="select3">Custom select 1</label>
-        <select id="select3" class="select3 groups" name="w-optgroups">
+        <select id="select3" class="select3 groups" name="single-sel">
             <option label="Please select an option html" value=""></option>
             <optgroup label="first group">
                 <option data-test="123" value="banana">Banana</option>
                 <option data-test="$56" value="apple">Apple</option>
-                <option data-test="6081" value="pomegranate">Pomegranate</option>
-                <option disabled data-test="gpi4je0" value="lidl">Lidl</option>
+                <option selected data-test="6081" value="pomegranate">Pomegranate</option>
+                <option data-test="gpi4je0" value="lidl">Lidl</option>
             </optgroup>
             <optgroup label="second group">
                 <option value="ledl">Ledl</option>
-                <option selected="selected" value="pear">Pear</option>
+                <option value="pear">Pear</option>
                 <option value="lemon">Lemon</option>
                 <option value="lime">Lime</option>
                 <option value="grape">Grape</option>
@@ -49,27 +49,28 @@
         <button type="submit">Submit form</button>
     </form>
 
-<!--    <form action="">-->
-<!--        <label for="select3-2">Custom select 2</label>-->
-<!--        <select multiple id="select3-2" class="select3 groups" name="w-optgroups">-->
-<!--            &lt;!&ndash;            <option label="Please select an option html" value=""></option>&ndash;&gt;-->
-<!--            <optgroup label="first group">-->
-<!--                <option data-test="123" value="banana">Banana</option>-->
-<!--                <option data-test="$56" value="apple">Apple</option>-->
-<!--                <option data-test="6081" value="pomegranate">Pomegranate</option>-->
-<!--                <option disabled data-test="gpi4je0" value="lidl">Lidl</option>-->
-<!--            </optgroup>-->
-<!--            <optgroup label="second group">-->
-<!--                <option value="ledl">Ledl</option>-->
-<!--                <option value="pear">Pear</option>-->
-<!--                <option value="lemon">Lemon</option>-->
-<!--                <option value="lime">Lime</option>-->
-<!--                <option value="grape">Grape</option>-->
-<!--                <option value="grozd">Grozd</option>-->
-<!--                <option value="grapefruit">Grapefruit</option>-->
-<!--            </optgroup>-->
-<!--        </select>-->
-<!--    </form>-->
+    <form action="">
+        <label for="select3-2">Custom select 2</label>
+        <select multiple id="select3-2" class="select3 groups" name="multiple-sel">
+            <!--            <option label="Please select an option html" value=""></option>-->
+            <optgroup label="first group">
+                <option data-test="123" value="banana">Banana</option>
+                <option data-test="$56" value="apple">Apple</option>
+                <option data-test="6081" value="pomegranate">Pomegranate</option>
+                <option disabled data-test="gpi4je0" value="lidl">Lidl</option>
+            </optgroup>
+            <optgroup label="second group">
+                <option value="ledl">Ledl</option>
+                <option value="pear">Pear</option>
+                <option value="lemon">Lemon</option>
+                <option value="lime">Lime</option>
+                <option value="grape">Grape</option>
+                <option value="grozd">Grozd</option>
+                <option value="grapefruit">Grapefruit</option>
+            </optgroup>
+        </select>
+        <button type="submit">Submit form</button>
+    </form>
 
 <!--    <img id="img" src="wrench.svg">-->
 
