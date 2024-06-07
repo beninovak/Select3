@@ -14,13 +14,10 @@ Element.prototype.Select3 = function(config = {}) {
     // If any options were set, apply them
     config = Select3_applyConfig(config)
 
-    // console.table(config)
-
     if (select.selectedOptions.length > config.maximumSelectedOptions) {
         config.maximumSelectedOptions = select.selectedOptions.length
     }
 
-    // console.table(config)
     // TODO --> Rename
     // TODO --> Check all other TODOs in IDE
 
@@ -94,49 +91,6 @@ Element.prototype.Select3 = function(config = {}) {
         e.preventDefault()
         select.open(e)
     })
-
-    for (let child of select.children) {
-
-        if (child.tagName === 'OPTION') {
-            Select3_appendOptions(select, select3, inner, child, config)
-        } else if (child.tagName === 'OPTGROUP') {
-
-            let optGroupEl = document.createElement('div')
-            optGroupEl.classList.add('optgroup')
-
-            let optGroupTitle = document.createElement('span')
-            optGroupTitle.classList.add('title')
-            optGroupTitle.textContent = child.label
-
-            optGroupEl.append(optGroupTitle)
-
-            for (let opt of child.children) {
-                Select3_appendOptions(select, select3, optGroupEl, opt, config)
-            }
-            inner.append(optGroupEl)
-        }
-    }
-
-    // TODO - check if this 'if' could be replaced with an upgraded version of 'Select3_ShowPlaceholderIfAppropriate' function
-    if (select.selectedOptions.length === 0 || (select[0].value === '' && select[0].textContent === '')) {
-        let placeholder = document.createElement('span')
-        placeholder.classList.add('placeholder')
-
-        let text = (config.placeholder !== '' ? config.placeholder : '\u00A0')
-
-        if (!select.multiple && select[0].label !== '') {
-            text = select[0].label
-        }
-
-        placeholder.textContent = text
-        select3.querySelector('span.selected-top')?.remove()
-        select3.prepend(placeholder)
-    }
-
-    select3.append(inner)
-
-    select.style.display = 'none'
-    select.parentNode.insertBefore(select3, select.nextSibling)
 
     select.val = function() {
         let value = []
@@ -215,7 +169,7 @@ Element.prototype.Select3 = function(config = {}) {
                 for (const property in optionConfig) {
                     newOption[property] = optionConfig[property]
                 }
-                select.append(newOption)
+                select.append(newOption) // TODO - CONTINUE HERE ( options are correctly added to HTML but select value is changed too quickly, even if option should not be selected because options are already capped )
                 Select3_appendOptions(select, select3, inner, newOption, config)
             } else { // Is optgroup
                 let newOptGroup = document.createElement('optgroup')
@@ -247,6 +201,50 @@ Element.prototype.Select3 = function(config = {}) {
             }
         }
     }
+
+    select3.selectedOptionsCount = 0 // Custom property for tracking how many options are already selected
+    for (let child of select.children) {
+
+        if (child.tagName === 'OPTION') {
+            Select3_appendOptions(select, select3, inner, child, config)
+        } else if (child.tagName === 'OPTGROUP') {
+
+            let optGroupEl = document.createElement('div')
+            optGroupEl.classList.add('optgroup')
+
+            let optGroupTitle = document.createElement('span')
+            optGroupTitle.classList.add('title')
+            optGroupTitle.textContent = child.label
+
+            optGroupEl.append(optGroupTitle)
+
+            for (let opt of child.children) {
+                Select3_appendOptions(select, select3, optGroupEl, opt, config)
+            }
+            inner.append(optGroupEl)
+        }
+    }
+
+    // TODO - check if this 'if' could be replaced with an upgraded version of 'Select3_ShowPlaceholderIfAppropriate' function
+    if (select.selectedOptions.length === 0 || (select[0].value === '' && select[0].textContent === '')) {
+        let placeholder = document.createElement('span')
+        placeholder.classList.add('placeholder')
+
+        let text = (config.placeholder !== '' ? config.placeholder : '\u00A0')
+
+        if (!select.multiple && select[0].label !== '') {
+            text = select[0].label
+        }
+
+        placeholder.textContent = text
+        select3.querySelector('span.selected-top')?.remove()
+        select3.prepend(placeholder)
+    }
+
+    select3.append(inner)
+
+    select.style.display = 'none'
+    select.parentNode.insertBefore(select3, select.nextSibling)
 
     Select3_initEvents(select3, config)
 
@@ -391,26 +389,24 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
         optEl.classList.add('disabled')
     }
 
-    // Copy selected node for use at the top of select3
+    optEl.setAttribute('data-selected', '0')
     if (opt.selected) {
         opt.setAttribute('selected', 'selected') // In case this option was added with 'appendOptions' function
-        let cloneEl = optEl.cloneNode()
+        let cloneEl = optEl.cloneNode() // Copy selected node for use at the top of select3
         cloneEl.classList.add('selected-top')
         cloneEl.textContent = (opt.label.length ? opt.label : opt.textContent)
 
-        if (select.multiple) {
+        if (select.multiple && select3.selectedOptionsCount < config.maximumSelectedOptions) {
+            select3.selectedOptionsCount++;
             cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
             select3.querySelector('.placeholder')?.remove()
             select3.prepend(cloneEl)
-        } else {
-            // select.value = opt.value // TODO - review if this is needed???
+            optEl.classList.add('selected')
+            optEl.setAttribute('data-selected', '1')
+        } else if (!select.multiple) {
+            select.value = opt.value
             select3.querySelector('.selected-top, .placeholder')?.replaceWith(cloneEl)
         }
-
-        optEl.classList.add('selected')
-        optEl.setAttribute('data-selected', '1')
-    } else {
-        optEl.setAttribute('data-selected', '0')
     }
 
     optEl.addEventListener('click', () => {
@@ -419,7 +415,7 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
         if (opt.disabled || select.selectedOptions.length >= config.maximumSelectedOptions && optEl.getAttribute('data-selected') === '0') return
 
         let cloneEl = optEl.cloneNode()
-        cloneEl.innerHTML = optEl.textContent // TODO -- check this shenanigans...why even use cloneEl??
+        cloneEl.innerHTML = optEl.textContent // TODO -- check this shenanigans...why even use cloneEl?? --> needed for 'selected-top'
         cloneEl.classList.add('selected-top')
 
         let isOptionAlreadySelected = false
@@ -722,7 +718,7 @@ function appendNewOpts() {
             //     // children: [555, true, "sge"],
             // },
         ]
-        sel.appendOptions(options)
+        // sel.appendOptions(options)
         sel2.appendOptions(options)
     }, 1000)
 }
