@@ -1,5 +1,5 @@
+const d = document
 Element.prototype.Select3 = function(config = {}) {
-
     const select = this
     if (select.tagName !== 'SELECT') return false
 
@@ -21,7 +21,7 @@ Element.prototype.Select3 = function(config = {}) {
     // TODO --> Rename
     // TODO --> Check all other TODOs in IDE
 
-    let select3 = document.createElement('div')
+    let select3 = d.createElement('div')
     select3.classList.add('select3')
     select3.setAttribute('tab-index', '0')
 
@@ -42,7 +42,7 @@ Element.prototype.Select3 = function(config = {}) {
             let closestSelect3 = e.target.closest('div.select3')
             Select3_openCloseSelect3(closestSelect3, config)
 
-            for (let sel3 of document.querySelectorAll('div.select3')) {
+            for (let sel3 of d.querySelectorAll('div.select3')) {
                 if (!sel3.isEqualNode(closestSelect3)) {
                     Select3_closeSelect3(sel3)
                 }
@@ -60,16 +60,16 @@ Element.prototype.Select3 = function(config = {}) {
         select3.classList.add('single')
     }
 
-    let inner = document.createElement('div')
+    let inner = d.createElement('div')
     inner.classList.add('inner')
 
     // Search input
     if (config.search) {
 
-        let searchWrapper = document.createElement('div')
+        let searchWrapper = d.createElement('div')
         searchWrapper.classList.add('search-wrapper')
 
-        let searchInput = document.createElement('input')
+        let searchInput = d.createElement('input')
         searchInput.classList.add('search')
         searchInput.setAttribute('type', 'search')
 
@@ -87,7 +87,23 @@ Element.prototype.Select3 = function(config = {}) {
         inner.prepend(searchWrapper)
     }
 
-    document.querySelector('label[for="' + select.id + '"]')?.addEventListener('click', (e) => {
+    // TODO - check if this 'if' could be replaced with an upgraded version of 'Select3_ShowPlaceholderIfAppropriate' function
+    if (select.selectedOptions.length === 0 || (select[0].value === '' && select[0].textContent === '')) {
+        let placeholder = d.createElement('span')
+        placeholder.classList.add('placeholder')
+
+        let text = (config.placeholder !== '' ? config.placeholder : '\u00A0')
+
+        if (!select.multiple && select[0].label !== '') {
+            text = select[0].label
+        }
+
+        placeholder.textContent = text
+        select3.querySelector('span.selected-top')?.remove()
+        select3.prepend(placeholder)
+    }
+
+    d.querySelector('label[for="' + select.id + '"]')?.addEventListener('click', (e) => {
         e.preventDefault()
         select.open(e)
     })
@@ -145,7 +161,7 @@ Element.prototype.Select3 = function(config = {}) {
         //      - 'disabled' ( regular option )
         //      - 'dataset' => array ( regular option )
         //      - 'children' => should contain array of options ( optgroup )
-        //      - 'optgroup' option to specify which optgroup the option should be appended to...maybe?
+        //      - 'optgroup' option to specify which optgroup the option should be appended to...maybe?...use index or label of optgroup???
 
         for (const option of options) {
             if (option.children?.length === 0 && (!option.hasOwnProperty('value') || !Select3_isOptionValid('value', option.value))) continue // Only do the value check on regular options and not optgroups
@@ -161,28 +177,30 @@ Element.prototype.Select3 = function(config = {}) {
                 }
             }
 
-            // TODO - CONTINUE HERE - new options with 'selected' don't work
             // TODO - If single select consider ignoring 'selected: true' if select already has value??
             // TODO - If multiple select then option with 'selected: true' should be appended to selected options
             if (optionConfig.children.length === 0) { // Is regular option
-                let newOption = document.createElement('option')
+                let newOption = d.createElement('option')
                 for (const property in optionConfig) {
                     newOption[property] = optionConfig[property]
                 }
-                select.append(newOption) // TODO - CONTINUE HERE ( options are correctly added to HTML but select value is changed too quickly, even if option should not be selected because options are already capped )
+                if ((select.multiple && select3.selectedOptionsCount >= config.maximumSelectedOptions) || (!select.multiple && select.val() !== '')) { // Deselect option if too max options are already selected
+                    optionConfig.selected = false
+                }
+                select.append(newOption)
                 Select3_appendOptions(select, select3, inner, newOption, config)
-            } else { // Is optgroup
-                let newOptGroup = document.createElement('optgroup')
+            } else { // Is optgroup - TODO --> do this recursively??...so that in the for loop below this function is just called again?
+                let newOptGroup = d.createElement('optgroup')
                 newOptGroup.label = optionConfig.label
-                let optGroupEl = document.createElement('div')
+                let optGroupEl = d.createElement('div')
                 optGroupEl.classList.add('optgroup')
-                let optGroupTitle = document.createElement('span')
+                let optGroupTitle = d.createElement('span')
                 optGroupTitle.classList.add('title')
                 optGroupTitle.textContent = optionConfig.label
                 optGroupEl.append(optGroupTitle)
 
                 for (const childOption of option.children) {
-                    let newOption = document.createElement('option')
+                    let newOption = d.createElement('option')
                     for (const property in childOption) {
                         // If 'options' argument contains a non-supported property, ignore it
                         if (optionDefaults.hasOwnProperty(property)) {
@@ -193,6 +211,9 @@ Element.prototype.Select3 = function(config = {}) {
                         }
                     }
 
+                    if ((select.multiple && select3.selectedOptionsCount >= config.maximumSelectedOptions) || (!select.multiple && select.val() !== '')) { // Deselect option if too max options are already selected
+                        newOption.selected = false
+                    }
                     newOptGroup.append(newOption)
                     Select3_appendOptions(select, select3, optGroupEl, newOption, config)
                 }
@@ -203,16 +224,17 @@ Element.prototype.Select3 = function(config = {}) {
     }
 
     select3.selectedOptionsCount = 0 // Custom property for tracking how many options are already selected
-    for (let child of select.children) {
+
+    for (let child of select.children) { // Append options
 
         if (child.tagName === 'OPTION') {
             Select3_appendOptions(select, select3, inner, child, config)
         } else if (child.tagName === 'OPTGROUP') {
 
-            let optGroupEl = document.createElement('div')
+            let optGroupEl = d.createElement('div')
             optGroupEl.classList.add('optgroup')
 
-            let optGroupTitle = document.createElement('span')
+            let optGroupTitle = d.createElement('span')
             optGroupTitle.classList.add('title')
             optGroupTitle.textContent = child.label
 
@@ -223,22 +245,6 @@ Element.prototype.Select3 = function(config = {}) {
             }
             inner.append(optGroupEl)
         }
-    }
-
-    // TODO - check if this 'if' could be replaced with an upgraded version of 'Select3_ShowPlaceholderIfAppropriate' function
-    if (select.selectedOptions.length === 0 || (select[0].value === '' && select[0].textContent === '')) {
-        let placeholder = document.createElement('span')
-        placeholder.classList.add('placeholder')
-
-        let text = (config.placeholder !== '' ? config.placeholder : '\u00A0')
-
-        if (!select.multiple && select[0].label !== '') {
-            text = select[0].label
-        }
-
-        placeholder.textContent = text
-        select3.querySelector('span.selected-top')?.remove()
-        select3.prepend(placeholder)
     }
 
     select3.append(inner)
@@ -360,7 +366,7 @@ function Select3_removeOptions(select, select3, hasSearch) {
 
 function Select3_appendOptions(select, select3, parent, opt, config) {
 
-    let optEl = document.createElement('span')
+    let optEl = d.createElement('span')
     optEl.setAttribute('data-value', opt.value.toString())
 
     // Transfer data- attributes
@@ -377,7 +383,7 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
     } else {
         // Format option if special formatting exists, else just fill option with text
         if (config.formatOptionsFunction !== null) {
-            let content = document.createElement('span')
+            let content = d.createElement('span')
             content.append(config.formatOptionsFunction(opt))
             optEl.innerHTML = content.innerHTML
         } else {
@@ -396,16 +402,19 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
         cloneEl.classList.add('selected-top')
         cloneEl.textContent = (opt.label.length ? opt.label : opt.textContent)
 
-        if (select.multiple && select3.selectedOptionsCount < config.maximumSelectedOptions) {
-            select3.selectedOptionsCount++;
+        if (!select.multiple) {
+            select.value = opt.value
+            console.log(cloneEl)
+            console.log(select3.querySelector('.placeholder'))
+            console.log(select3.querySelector('.selected-top, .placeholder'))
+            select3.querySelector('.selected-top, .placeholder')?.replaceWith(cloneEl)
+        } else if (select.multiple && select3.selectedOptionsCount < config.maximumSelectedOptions) {
+            select3.selectedOptionsCount++
             cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
             select3.querySelector('.placeholder')?.remove()
             select3.prepend(cloneEl)
             optEl.classList.add('selected')
             optEl.setAttribute('data-selected', '1')
-        } else if (!select.multiple) {
-            select.value = opt.value
-            select3.querySelector('.selected-top, .placeholder')?.replaceWith(cloneEl)
         }
     }
 
@@ -486,7 +495,7 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
 
 function Select3_showPlaceholderIfAppropriate(select, select3, config) {
     if (select.selectedOptions.length === 0 && config.placeholder !== '') {
-        let placeholder = document.createElement('span')
+        let placeholder = d.createElement('span')
         placeholder.classList.add('placeholder')
         placeholder.textContent = config.placeholder
         select3.prepend(placeholder)
@@ -494,7 +503,7 @@ function Select3_showPlaceholderIfAppropriate(select, select3, config) {
 }
 
 function Select3_getCloseBtn(select, select3, config) {
-    let closeBtn = document.createElement('b')
+    let closeBtn = d.createElement('b')
     closeBtn.classList.add('remove')
     closeBtn.textContent = '×'
     closeBtn.addEventListener('click', (e) => {
@@ -504,7 +513,7 @@ function Select3_getCloseBtn(select, select3, config) {
     return closeBtn
 }
 
-// TODO - consider using this in other appropriate places - 'data-selected', '0'
+// TODO - consider using this in other appropriate places - 'data-selected', '0' - what did I mean by this???
 function Select3_unselectOption(select, select3, option, config) {
 
     let value = option.getAttribute('data-value')
@@ -525,9 +534,7 @@ function Select3_unselectOption(select, select3, option, config) {
 }
 
 function Select3_filterInput(filter, options, select, inner, config) {
-
     filter = filter.toUpperCase()
-
     for (let opt of options) {
         let txtValue = opt.textContent || opt.innerText
         if (txtValue.toUpperCase().indexOf(filter) > -1) {
@@ -563,7 +570,7 @@ function Select3_filterInput(filter, options, select, inner, config) {
         if (children.length) {
             inner.querySelector('.no-results')?.remove()
         } else if (!children.length && !inner.querySelector('.no-results')) {
-            let noResults = document.createElement('span')
+            let noResults = d.createElement('span')
             noResults.classList.add('no-results')
             noResults.textContent = config.searchNoResults
             inner.append(noResults)
@@ -600,7 +607,6 @@ function Select3_applyConfig(config) {
 
 function Select3_isOptionValid(key, value) {
     switch (key) {
-
         case 'selected': // for options object
         case 'disabled': // for options object
         case 'search':
@@ -611,7 +617,6 @@ function Select3_isOptionValid(key, value) {
         case 'dropdownMaxHeight':
         case 'maximumSelectedOptions':
             return typeof value === 'number' && value > 0
-
 
         case 'label': // for options object
         case 'value': // for options object
@@ -631,10 +636,10 @@ function Select3_isOptionValid(key, value) {
 
 function Select3_initDocumentListener() {
     /* Handle closing of select when clicking outside it */
-    document.addEventListener('click', (e) => {
+    d.addEventListener('click', (e) => {
         e.stopPropagation()
         if (e.target.closest('div.select3') === null) {
-            for (let select3 of document.querySelectorAll('div.select3')) {
+            for (let select3 of d.querySelectorAll('div.select3')) {
                 Select3_closeSelect3(select3)
             }
         }
@@ -644,7 +649,7 @@ function Select3_initDocumentListener() {
 Select3_initDocumentListener() // TODO Should be last line in file
 
 // TODO - comment / remove
-const sel = document.querySelector('#select3')
+const sel = d.querySelector('#select3')
 sel.Select3({
     search: false,
     searchNoResults: 'Found no matching options',
@@ -653,8 +658,8 @@ sel.Select3({
     maximumSelectedOptions: 3,
     formatOptionsFunction: function(option) {
         if (option.dataset.img) {
-            let span = document.createElement('span')
-            let image = document.createElement('img')
+            let span = d.createElement('span')
+            let image = d.createElement('img')
             image.src = option.dataset.img
             span.append(image)
             span.append(option.textContent)
@@ -665,62 +670,60 @@ sel.Select3({
     }
 })
 
-const sel2 = document.querySelector('#select3-2')
+const sel2 = d.querySelector('#select3-2')
 sel2.Select3({
     search: true,
     searchNoResults: 'Found no matching options',
     closeOnSelect: false,
     placeholder: 'Please select an option placeholder',
-    maximumSelectedOptions: 3,
-    formatOptionsFunction: function(option) {
-        if (option.dataset.img) {
-            let span = document.createElement('span')
-            let image = document.createElement('img')
-            image.src = option.dataset.img
-            span.append(image)
-            span.append(option.textContent)
-            return span
-        } else {
-            return option.textContent
-        }
-    }
+    maximumSelectedOptions: 4,
+    // formatOptionsFunction: function(option) {
+    //     if (option.dataset.img) {
+    //         let span = d.createElement('span')
+    //         let image = d.createElement('img')
+    //         image.src = option.dataset.img
+    //         span.append(image)
+    //         span.append(option.textContent)
+    //         return span
+    //     } else {
+    //         return option.textContent
+    //     }
+    // }
 })
 
 function appendNewOpts() {
-    setTimeout(() => {
-        const options = [
-            {
-                label: 'Optgroup title 1',
-                children: [
-                    {
-                        textContent: 'Child option 1',
-                        value: 'some_value_1',
-                    },
-                    {
-                        textContent: 'Child option 2',
-                        value: 'some_value_2',
-                        selected: true,
-                        // disabled: true,
-                    },
-                    {
-                        textContent: 'Child option 3',
-                        value: 'some_value_3',
-                    },
-                ],
-                // dataset: [1, 2, 3],
-            },
-            // {
-            //     textContent: 'Appended option 2',
-            //     value: 'another value',
-            //     selected: false,
-            //     disabled: false,
-            //     // dataset: ["123", 431, false],
-            //     // children: [555, true, "sge"],
-            // },
-        ]
-        // sel.appendOptions(options)
-        sel2.appendOptions(options)
-    }, 1000)
+    const options = [
+        {
+            label: 'Optgroup title 1',
+            children: [
+                {
+                    textContent: 'Child option 1',
+                    value: 'some_value_1',
+                },
+                {
+                    textContent: 'Child option 2',
+                    value: 'some_value_2',
+                    selected: true,
+                    // disabled: true,
+                },
+                {
+                    textContent: 'Child option 3',
+                    value: 'some_value_3',
+                },
+            ],
+            // dataset: [1, 2, 3],
+        },
+        // {
+        //     textContent: 'Appended option 2',
+        //     value: 'another value',
+        //     selected: false,
+        //     disabled: false,
+        //     // dataset: ["123", 431, false],
+        //     // children: [555, true, "sge"],
+        // },
+    ]
+    sel.appendOptions(options)
+    // sel2.appendOptions(options)
 }
 
-appendNewOpts()
+setTimeout(appendNewOpts, 1000)
