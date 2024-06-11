@@ -19,7 +19,7 @@ Element.prototype.Select3 = function(config = {}) {
     }
 
     // TODO --> Rename
-    // TODO --> Check all other TODOs in IDE
+    // TODO --> Check all other TODOs
 
     let select3 = d.createElement('div')
     select3.classList.add('select3')
@@ -124,13 +124,6 @@ Element.prototype.Select3 = function(config = {}) {
     select.close = function(e = null) {
         e?.stopPropagation()
         Select3_closeSelect3(select3)
-
-        /* TEST - TODO REMOVE - TEST */
-        setTimeout(() => {
-            console.log('TESTING REMOVAL')
-            Select3_removeOptions(select, select3, config.search)
-        }, 1000)
-        /* TEST - TODO REMOVE - TEST */
     }
 
     select.toggle = function(e = null) {
@@ -141,8 +134,10 @@ Element.prototype.Select3 = function(config = {}) {
         }
     }
 
-    select.appendOptions = function(options, e = null) { // TODO - asses the 'e' argument...is it necessary?
-        if (!Array.isArray(options)) return // TODO - maybe throw console error here instead??
+    select.appendOptions = function(options, parent = null, e = null) { // TODO - asses the 'e' argument...is it necessary?
+        if (!Array.isArray(options)) {
+            throw new TypeError('Incorrect argument passed to function appendOptions! The "options" argument must be of type array.');
+        }
 
         const optionDefaults = {
             textContent: '',
@@ -177,8 +172,6 @@ Element.prototype.Select3 = function(config = {}) {
                 }
             }
 
-            // TODO - If single select consider ignoring 'selected: true' if select already has value??
-            // TODO - If multiple select then option with 'selected: true' should be appended to selected options
             if (optionConfig.children.length === 0) { // Is regular option
                 let newOption = d.createElement('option')
                 for (const property in optionConfig) {
@@ -367,6 +360,7 @@ function Select3_removeOptions(select, select3, hasSearch) {
 function Select3_appendOptions(select, select3, parent, opt, config) {
 
     let optEl = d.createElement('span')
+    optEl.setAttribute('data-selected', '0')
     optEl.setAttribute('data-value', opt.value.toString())
 
     // Transfer data- attributes
@@ -395,7 +389,6 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
         optEl.classList.add('disabled')
     }
 
-    optEl.setAttribute('data-selected', '0')
     if (opt.selected) {
         opt.setAttribute('selected', 'selected') // In case this option was added with 'appendOptions' function
         let cloneEl = optEl.cloneNode() // Copy selected node for use at the top of select3
@@ -404,18 +397,15 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
 
         if (!select.multiple) {
             select.value = opt.value
-            console.log(cloneEl)
-            console.log(select3.querySelector('.placeholder'))
-            console.log(select3.querySelector('.selected-top, .placeholder'))
             select3.querySelector('.selected-top, .placeholder')?.replaceWith(cloneEl)
         } else if (select.multiple && select3.selectedOptionsCount < config.maximumSelectedOptions) {
             select3.selectedOptionsCount++
             cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
             select3.querySelector('.placeholder')?.remove()
             select3.prepend(cloneEl)
-            optEl.classList.add('selected')
-            optEl.setAttribute('data-selected', '1')
         }
+        optEl.classList.add('selected')
+        optEl.setAttribute('data-selected', '1')
     }
 
     optEl.addEventListener('click', () => {
@@ -423,8 +413,8 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
         // Or if user selects an option, whilst already having max selected options
         if (opt.disabled || select.selectedOptions.length >= config.maximumSelectedOptions && optEl.getAttribute('data-selected') === '0') return
 
-        let cloneEl = optEl.cloneNode()
-        cloneEl.innerHTML = optEl.textContent // TODO -- check this shenanigans...why even use cloneEl?? --> needed for 'selected-top'
+        let cloneEl = optEl.cloneNode() // cloneEl needed for '.selected-top'
+        cloneEl.innerHTML = optEl.textContent
         cloneEl.classList.add('selected-top')
 
         let isOptionAlreadySelected = false
@@ -471,7 +461,7 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
                 optEl.setAttribute('data-selected', '1')
 
                 // Only happens if the option that was just clicked was the first selected option.
-                select3.querySelector(':scope > span.placeholder')?.remove() // TODO - can probably remove the ':scope'??
+                select3.querySelector(':scope > span.placeholder')?.remove()
             }
 
             // When the maximum allowed amount of options has been selected, add class to select3 to indicate this.
@@ -517,9 +507,8 @@ function Select3_getCloseBtn(select, select3, config) {
 function Select3_unselectOption(select, select3, option, config) {
 
     let value = option.getAttribute('data-value')
-    let selectOption = select.querySelector('option[value="' + value + '"]')
+    select.querySelector('option[value="' + value + '"]')?.removeAttribute('selected')
 
-    selectOption?.removeAttribute('selected')
     let select3Option = select3.querySelector('.inner span[data-value="' + value + '"]')
 
     select3Option.classList.remove('selected')
