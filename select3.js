@@ -35,16 +35,15 @@ Element.prototype.Select3 = function(config = {}) {
         // select3.focus()
         select3.querySelector('.inner')?.focus()
 
-        // If no closest '.inner' exists, the target can only be the select3 itself,
-        // the selected-top option/tags, and the placeholder element
+        // If no closest '.inner' exists, the target can only be the select3 itself, the selected-top option/tags, and the placeholder element
         if (e.target.closest('.inner') === null) {
 
             let closestSelect3 = e.target.closest('div.select3')
-            Select3_openCloseSelect3(closestSelect3, config)
+            Select3_openCloseSelect3(select, closestSelect3, config)
 
             for (let sel3 of d.querySelectorAll('div.select3')) {
                 if (!sel3.isEqualNode(closestSelect3)) {
-                    Select3_closeSelect3(sel3)
+                    Select3_closeSelect3(select, sel3)
                 }
             }
         }
@@ -118,12 +117,12 @@ Element.prototype.Select3 = function(config = {}) {
 
     select.open = function(e = null) {
         e?.stopPropagation()
-        Select3_openSelect3(select3, config.dropdownMaxHeight)
+        Select3_openSelect3(select, select3, config.dropdownMaxHeight)
     }
 
     select.close = function(e = null) {
         e?.stopPropagation()
-        Select3_closeSelect3(select3)
+        Select3_closeSelect3(select, select3)
     }
 
     select.toggle = function(e = null) {
@@ -138,6 +137,8 @@ Element.prototype.Select3 = function(config = {}) {
         if (!Array.isArray(options)) {
             throw new TypeError('Incorrect argument passed to function appendOptions! The "options" argument must be of type array.');
         }
+
+        // let parentToAppendTo = (parent === null ? select : parent)
 
         const optionDefaults = {
             textContent: '',
@@ -154,12 +155,14 @@ Element.prototype.Select3 = function(config = {}) {
         //      - 'value' - required ( only for regular option )
         //      - 'selected' ( regular option )
         //      - 'disabled' ( regular option )
-        //      - 'dataset' => array ( regular option )
+        //      - 'dataset' => JSON ( regular option )
         //      - 'children' => should contain array of options ( optgroup )
         //      - 'optgroup' option to specify which optgroup the option should be appended to...maybe?...use index or label of optgroup???
 
         for (const option of options) {
-            if (option.children?.length === 0 && (!option.hasOwnProperty('value') || !Select3_isOptionValid('value', option.value))) continue // Only do the value check on regular options and not optgroups
+            if (option.children?.length === 0 && (!option.hasOwnProperty('value') || !Select3_isOptionValid('value', option.value))) { // Only do the value check on regular options and not optgroups
+                continue
+            }
             let optionConfig = optionDefaults
 
             for (const property in option) {
@@ -214,6 +217,8 @@ Element.prototype.Select3 = function(config = {}) {
                 inner.append(optGroupEl)
             }
         }
+
+        Select3_initKeyboard(select, select3, config)
     }
 
     select3.selectedOptionsCount = 0 // Custom property for tracking how many options are already selected
@@ -245,14 +250,14 @@ Element.prototype.Select3 = function(config = {}) {
     select.style.display = 'none'
     select.parentNode.insertBefore(select3, select.nextSibling)
 
-    Select3_initEvents(select3, config)
+    Select3_initKeyboard(select, select3, config)
 
     select.setAttribute('data-select3-initialized', '1')
 
     return select
 }
 
-function Select3_openSelect3(select3, configDropdownMaxHeight) {
+function Select3_openSelect3(select, select3, configDropdownMaxHeight) {
     // select3.focus()
     select3.classList.add('opened')
     select3.setAttribute('data-opened', '1')
@@ -267,9 +272,10 @@ function Select3_openSelect3(select3, configDropdownMaxHeight) {
     if (inner.offsetHeight >= innerFromBottom) {
         inner.classList.add('drop-up')
     }
+    select.dispatchEvent(new Event('select3:open'))
 }
 
-function Select3_closeSelect3(select3) {
+function Select3_closeSelect3(select, select3) {
 
     let inner = select3.querySelector('.inner')
     select3.classList.remove('opened')
@@ -285,19 +291,20 @@ function Select3_closeSelect3(select3) {
     for (let opt of select3.querySelectorAll('.option-hidden')) {
         opt.classList.remove('option-hidden')
     }
+    select.dispatchEvent(new Event('select3:close'))
 }
 
-function Select3_openCloseSelect3(select3, config = {}) {
+function Select3_openCloseSelect3(select, select3, config = {}) {
     select3.classList.toggle('opened')
 
     if (select3.classList.contains('opened')) {
-        Select3_openSelect3(select3, config.dropdownMaxHeight)
+        Select3_openSelect3(select, select3, config.dropdownMaxHeight)
     } else {
-        Select3_closeSelect3(select3)
+        Select3_closeSelect3(select, select3)
     }
 }
 
-function Select3_initEvents(select3, config) {
+function Select3_initKeyboard(select, select3, config) {
     const SPACEBAR_KEY_CODE = 32
     const ENTER_KEY_CODE = 13
     const DOWN_ARROW_KEY_CODE = 40
@@ -309,15 +316,16 @@ function Select3_initEvents(select3, config) {
     let focusedIndex = 0
     options[focusedIndex].classList.add('focused')
 
-    select3.addEventListener('keydown', (e) => {
+    select3.onkeydown = null
+    select3.onkeydown = function(e) {
         switch(e.keyCode) {
             case SPACEBAR_KEY_CODE:
                 e.preventDefault() // Prevents scrolling down of list
-                Select3_openSelect3(select3, config.dropdownMaxHeight)
+                Select3_openSelect3(select, select3, config.dropdownMaxHeight)
                 break
 
             case ESCAPE_KEY_CODE:
-                Select3_closeSelect3(select3)
+                Select3_closeSelect3(select, select3)
                 break
 
             case UP_ARROW_KEY_CODE:
@@ -342,7 +350,7 @@ function Select3_initEvents(select3, config) {
                 }
                 break
         }
-    })
+    }
 }
 
 function Select3_removeOptions(select, select3, hasSearch) {
@@ -455,7 +463,6 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
             } else {
                 select3.insertBefore(cloneEl, select3.querySelector('.inner'))
                 opt.setAttribute('selected', 'selected')
-                console.log(select.selectedOptions)
 
                 optEl.classList.add('selected')
                 optEl.setAttribute('data-selected', '1')
@@ -477,7 +484,7 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
         select.dispatchEvent(new Event('change'))
 
         if (config.closeOnSelect) {
-            Select3_closeSelect3(select3, config)
+            Select3_closeSelect3(select, select3)
         }
     })
     parent.append(optEl)
@@ -629,7 +636,7 @@ function Select3_initDocumentListener() {
         e.stopPropagation()
         if (e.target.closest('div.select3') === null) {
             for (let select3 of d.querySelectorAll('div.select3')) {
-                Select3_closeSelect3(select3)
+                Select3_closeSelect3(select3.previousSibling, select3)
             }
         }
     })
@@ -680,39 +687,84 @@ sel2.Select3({
     // }
 })
 
-function appendNewOpts() {
-    const options = [
-        {
-            label: 'Optgroup title 1',
-            children: [
-                {
-                    textContent: 'Child option 1',
-                    value: 'some_value_1',
-                },
-                {
-                    textContent: 'Child option 2',
-                    value: 'some_value_2',
-                    selected: true,
-                    // disabled: true,
-                },
-                {
-                    textContent: 'Child option 3',
-                    value: 'some_value_3',
-                },
-            ],
-            // dataset: [1, 2, 3],
-        },
-        // {
-        //     textContent: 'Appended option 2',
-        //     value: 'another value',
-        //     selected: false,
-        //     disabled: false,
-        //     // dataset: ["123", 431, false],
-        //     // children: [555, true, "sge"],
-        // },
-    ]
-    sel.appendOptions(options)
-    // sel2.appendOptions(options)
-}
+// function appendNewOpts() {
+//     const options1 = [
+//         {
+//             label: 'Optgroup title 1',
+//             children: [
+//                 {
+//                     textContent: 'Child option 1',
+//                     value: 'some_value_1',
+//                 },
+//                 {
+//                     textContent: 'Child option 2',
+//                     value: 'some_value_2',
+//                     selected: true,
+//                     // disabled: true,
+//                 },
+//                 {
+//                     textContent: 'Child option 3',
+//                     value: 'some_value_3',
+//                 },
+//             ],
+//             // dataset: [1, 2, 3],
+//         },
+//         // {
+//         //     textContent: 'Appended option 2',
+//         //     value: 'another value',
+//         //     selected: false,
+//         //     disabled: false,
+//         //     // dataset: ["123", 431, false],
+//         //     // children: [555, true, "sge"],
+//         // },
+//     ]
+//
+//
+//     sel.appendOptions(options1)
+//
+//     const options2 = [
+//         {
+//             label: 'Optgroup title 1',
+//             children: [
+//                 {
+//                     textContent: 'Child option 1',
+//                     value: 'some_value_1',
+//                 },
+//                 {
+//                     label: 'Child option 2',
+//                     value: 'some_value_2',
+//                     selected: true,
+//                     // disabled: true,
+//                 },
+//                 {
+//                     textContent: 'Child option 3',
+//                     value: 'some_value_3',
+//                 },
+//             ],
+//             // dataset: [1, 2, 3],
+//         },
+//         // {
+//         //     textContent: 'Appended option 2',
+//         //     value: 'another value',
+//         //     selected: false,
+//         //     disabled: false,
+//         //     // dataset: ["123", 431, false],
+//         //     // children: [555, true, "sge"],
+//         // },
+//     ]
+//     sel2.appendOptions(options2)
+// }
 
-setTimeout(appendNewOpts, 1000)
+// setTimeout(appendNewOpts, 1000)
+
+sel.addEventListener('change', () => {
+    console.log('CHANGING')
+})
+
+sel.addEventListener('select3:open', () => {
+    console.log('OPENING')
+})
+
+sel.addEventListener('select3:close', () => {
+    console.log('CLOSING')
+})

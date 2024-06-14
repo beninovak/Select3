@@ -1,4 +1,3 @@
-// TODO --> Consider wrapping matching search results in <span> to
+TODO --> Consider wrapping matching search results in <span> to
             enable highlighting the part of options that match the search string
-// TODO --> Consider 'copyDataAttributes' option? Currently, it copies by default
-// TODO --> Accessibility ( role 'listbox' for inner, role 'option' for options )...just use <menu> and <li> instead???
+TODO --> Accessibility ( role 'listbox' for inner, role 'option' for options )...just use <menu> and <li> instead???
