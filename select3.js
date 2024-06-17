@@ -19,6 +19,7 @@ Element.prototype.Select3 = function(config = {}) {
     }
 
     // TODO --> Rename
+    // TODO --> minify function names to save chars
     // TODO --> Check all other TODOs
 
     let select3 = d.createElement('div')
@@ -41,9 +42,9 @@ Element.prototype.Select3 = function(config = {}) {
             let closestSelect3 = e.target.closest('div.select3')
             Select3_openCloseSelect3(select, closestSelect3, config)
 
-            for (let sel3 of d.querySelectorAll('div.select3')) {
+            for (let sel3 of d.querySelectorAll('div.select3.opened')) {
                 if (!sel3.isEqualNode(closestSelect3)) {
-                    Select3_closeSelect3(select, sel3)
+                    Select3_closeSelect3(sel3.previousElementSibling, sel3)
                 }
             }
         }
@@ -254,6 +255,7 @@ Element.prototype.Select3 = function(config = {}) {
 
     select.setAttribute('data-select3-initialized', '1')
 
+    select.dispatchEvent(new Event('select3:init'))
     return select
 }
 
@@ -474,6 +476,7 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
             // When the maximum allowed amount of options has been selected, add class to select3 to indicate this.
             if (select.selectedOptions.length >= config.maximumSelectedOptions) {
                 select3.classList.add('maxed')
+                select.dispatchEvent(new Event('select3:maxed'))
             } else {
                 select3.classList.remove('maxed')
             }
@@ -635,7 +638,7 @@ function Select3_initDocumentListener() {
     d.addEventListener('click', (e) => {
         e.stopPropagation()
         if (e.target.closest('div.select3') === null) {
-            for (let select3 of d.querySelectorAll('div.select3')) {
+            for (let select3 of d.querySelectorAll('div.select3.opened')) {
                 Select3_closeSelect3(select3.previousSibling, select3)
             }
         }
@@ -646,6 +649,9 @@ Select3_initDocumentListener() // TODO Should be last line in file
 
 // TODO - comment / remove
 const sel = d.querySelector('#select3')
+sel.addEventListener('select3:init', () => {
+    console.log('INITING ' + sel.id)
+})
 sel.Select3({
     search: false,
     searchNoResults: 'Found no matching options',
@@ -666,13 +672,17 @@ sel.Select3({
     }
 })
 
+
 const sel2 = d.querySelector('#select3-2')
+sel2.addEventListener('select3:init', () => {
+    console.log('INITING ' + sel2.id)
+})
 sel2.Select3({
     search: true,
     searchNoResults: 'Found no matching options',
     closeOnSelect: false,
     placeholder: 'Please select an option placeholder',
-    maximumSelectedOptions: 4,
+    maximumSelectedOptions: 3,
     // formatOptionsFunction: function(option) {
     //     if (option.dataset.img) {
     //         let span = d.createElement('span')
@@ -757,14 +767,19 @@ sel2.Select3({
 
 // setTimeout(appendNewOpts, 1000)
 
-sel.addEventListener('change', () => {
+sel2.addEventListener('change', () => {
     console.log('CHANGING')
 })
 
-sel.addEventListener('select3:open', () => {
+sel2.addEventListener('select3:open', () => {
     console.log('OPENING')
 })
 
-sel.addEventListener('select3:close', () => {
+sel2.addEventListener('select3:close', () => {
     console.log('CLOSING')
 })
+
+sel2.addEventListener('select3:maxed', () => {
+    console.log('MAXED')
+})
+
