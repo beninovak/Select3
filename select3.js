@@ -222,6 +222,16 @@ Element.prototype.Select3 = function(config = {}) {
         Select3_initKeyboard(select, select3, config)
     }
 
+    select.clear = function() {
+        console.log('CLEARING ALL OPTIONS') // TODO
+    }
+
+    select.destroy = function() {
+        select3.remove()
+        select.dispatchEvent(new Event('select3:destroy'))
+        select.style.display = ''
+    }
+
     select3.selectedOptionsCount = 0 // Custom property for tracking how many options are already selected
 
     for (let child of select.children) { // Append options
@@ -413,6 +423,13 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
             cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
             select3.querySelector('.placeholder')?.remove()
             select3.prepend(cloneEl)
+
+            select.dispatchEvent(new Event('change'))
+
+            if (select3.selectedOptionsCount === config.maximumSelectedOptions) {
+                select3.classList.add('maxed')
+                select.dispatchEvent(new Event('select3:maxed'))
+            }
         }
         optEl.classList.add('selected')
         optEl.setAttribute('data-selected', '1')
@@ -697,75 +714,9 @@ sel2.Select3({
     // }
 })
 
-// function appendNewOpts() {
-//     const options1 = [
-//         {
-//             label: 'Optgroup title 1',
-//             children: [
-//                 {
-//                     textContent: 'Child option 1',
-//                     value: 'some_value_1',
-//                 },
-//                 {
-//                     textContent: 'Child option 2',
-//                     value: 'some_value_2',
-//                     selected: true,
-//                     // disabled: true,
-//                 },
-//                 {
-//                     textContent: 'Child option 3',
-//                     value: 'some_value_3',
-//                 },
-//             ],
-//             // dataset: [1, 2, 3],
-//         },
-//         // {
-//         //     textContent: 'Appended option 2',
-//         //     value: 'another value',
-//         //     selected: false,
-//         //     disabled: false,
-//         //     // dataset: ["123", 431, false],
-//         //     // children: [555, true, "sge"],
-//         // },
-//     ]
-//
-//
-//     sel.appendOptions(options1)
-//
-//     const options2 = [
-//         {
-//             label: 'Optgroup title 1',
-//             children: [
-//                 {
-//                     textContent: 'Child option 1',
-//                     value: 'some_value_1',
-//                 },
-//                 {
-//                     label: 'Child option 2',
-//                     value: 'some_value_2',
-//                     selected: true,
-//                     // disabled: true,
-//                 },
-//                 {
-//                     textContent: 'Child option 3',
-//                     value: 'some_value_3',
-//                 },
-//             ],
-//             // dataset: [1, 2, 3],
-//         },
-//         // {
-//         //     textContent: 'Appended option 2',
-//         //     value: 'another value',
-//         //     selected: false,
-//         //     disabled: false,
-//         //     // dataset: ["123", 431, false],
-//         //     // children: [555, true, "sge"],
-//         // },
-//     ]
-//     sel2.appendOptions(options2)
-// }
-
-// setTimeout(appendNewOpts, 1000)
+sel.addEventListener('change', () => {
+    console.log('CHANGING')
+})
 
 sel2.addEventListener('change', () => {
     console.log('CHANGING')
@@ -783,3 +734,76 @@ sel2.addEventListener('select3:maxed', () => {
     console.log('MAXED')
 })
 
+sel2.addEventListener('select3:destroy', () => {
+    console.log('DESTROYING ' + sel2.id)
+})
+
+
+function appendNewOpts() {
+    const options1 = [
+        {
+            label: 'Optgroup title 1',
+            children: [
+                {
+                    textContent: 'Child option 1',
+                    value: 'some_value_1',
+                },
+                {
+                    textContent: 'Child option 2',
+                    value: 'some_value_2',
+                    selected: true,
+                    // disabled: true,
+                },
+                {
+                    textContent: 'Child option 3',
+                    value: 'some_value_3',
+                },
+            ],
+        },
+    ]
+    // sel.appendOptions(options1)
+
+    const options2 = [
+        // {
+        //     label: 'Optgroup title 1',
+        //     children: [
+        //         {
+        //             textContent: 'Child option 1',
+        //             value: 'some_value_1',
+        //         },
+        //         {
+        //             label: 'Child option 2',
+        //             value: 'some_value_2',
+        //             selected: true,
+        //             // disabled: true,
+        //         },
+        //         {
+        //             textContent: 'Child option 3',
+        //             value: 'some_value_3',
+        //         },
+        //     ],
+        //     // dataset: [1, 2, 3],
+        // },
+        {
+            textContent: 'Appended option 1',
+            value: 'app_opt_1',
+            selected: false,
+            disabled: false,
+        },
+        {
+            textContent: 'Appended option 2',
+            value: 'app_opt_2',
+            selected: true,
+            disabled: false,
+        },
+        {
+            textContent: 'Appended option 3',
+            value: 'app_opt_3',
+            selected: true,
+            disabled: false,
+        }
+    ]
+    sel2.appendOptions(options2)
+}
+
+setTimeout(appendNewOpts, 1000)
