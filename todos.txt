@@ -1,7 +1,7 @@
 // 1. if maxSelectedOptions is smaller than current selected options, maxSelectedOptions will be raised to that number
 // 2. AJAX search - function should construct <option> elements and add them to <select> element as well -- why even do this??? Let user do their own AJAX and use .appendOptions
 // 3. Keyboard support - check <select> element controls and copy them
-4. Events - on close, on open, (on select, on deselect => on change), on maxed options, on init, on destroy, on clear all options
+4. Events - on close, on open, (on select, on deselect => on change), on maxed options, on init, on destroy, on clear all options, maybe on select/unselect option, maybe also before select/clear/destroy etc...?
 // 5. Check if you could append array of options to an empty select with no options
 // 6. Dynamic option creation
-7. Clear all options method
+// 7. Clear all options method

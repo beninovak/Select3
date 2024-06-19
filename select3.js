@@ -113,7 +113,10 @@ Element.prototype.Select3 = function(config = {}) {
         for (let selOpt of select.selectedOptions) {
             value.push(selOpt.value)
         }
-        return select.multiple ? value : value[0]
+        if (value.length > 0) {
+            return select.multiple ? value : value[0]
+        }
+        return '';
     }
 
     select.open = function(e = null) {
@@ -223,13 +226,24 @@ Element.prototype.Select3 = function(config = {}) {
     }
 
     select.clear = function() {
-        console.log('CLEARING ALL OPTIONS') // TODO
+        select.innerHTML = ''
+        select.value = ''
+        inner.innerHTML = ''
+        select3.selectedOptionsCount = 0
+        select3.querySelectorAll('.selected-top')?.forEach((el) => {
+            el.remove()
+        })
+        Select3_showPlaceholderIfAppropriate(select, select3, config)
+        select.close()
+        select.dispatchEvent(new Event('select3:clear'))
     }
 
     select.destroy = function() {
         select3.remove()
         select.dispatchEvent(new Event('select3:destroy'))
         select.style.display = ''
+        select.removeAttribute('tab-index')
+        select.removeAttribute('data-select3-initialized')
     }
 
     select3.selectedOptionsCount = 0 // Custom property for tracking how many options are already selected
@@ -545,7 +559,7 @@ function Select3_unselectOption(select, select3, option, config) {
 
     Select3_showPlaceholderIfAppropriate(select, select3, config)
 
-    // Needed because anytime an option is deselected by clicking on the 'x' in the tags, the <select>'s value is updated.
+    // Needed because anytime an option is deselected by clicking on the 'x' in the tags, the <select>'s value is updated
     select.dispatchEvent(new Event('change'))
 }
 
@@ -662,7 +676,7 @@ function Select3_initDocumentListener() {
     })
 }
 
-Select3_initDocumentListener() // TODO Should be last line in file
+Select3_initDocumentListener() // TODO Should be last line in file --> maybe just unwrap this function??
 
 // TODO - comment / remove
 const sel = d.querySelector('#select3')
@@ -738,6 +752,14 @@ sel2.addEventListener('select3:destroy', () => {
     console.log('DESTROYING ' + sel2.id)
 })
 
+sel2.addEventListener('select3:clear', () => {
+    console.log('CLEARING ' + sel2.id)
+})
+
+// setTimeout(() => {
+//     sel.clear()
+//     sel2.clear()
+// }, 2000)
 
 function appendNewOpts() {
     const options1 = [
@@ -752,7 +774,6 @@ function appendNewOpts() {
                     textContent: 'Child option 2',
                     value: 'some_value_2',
                     selected: true,
-                    // disabled: true,
                 },
                 {
                     textContent: 'Child option 3',
@@ -761,29 +782,9 @@ function appendNewOpts() {
             ],
         },
     ]
-    // sel.appendOptions(options1)
+    sel.appendOptions(options1)
 
     const options2 = [
-        // {
-        //     label: 'Optgroup title 1',
-        //     children: [
-        //         {
-        //             textContent: 'Child option 1',
-        //             value: 'some_value_1',
-        //         },
-        //         {
-        //             label: 'Child option 2',
-        //             value: 'some_value_2',
-        //             selected: true,
-        //             // disabled: true,
-        //         },
-        //         {
-        //             textContent: 'Child option 3',
-        //             value: 'some_value_3',
-        //         },
-        //     ],
-        //     // dataset: [1, 2, 3],
-        // },
         {
             textContent: 'Appended option 1',
             value: 'app_opt_1',
@@ -793,7 +794,7 @@ function appendNewOpts() {
         {
             textContent: 'Appended option 2',
             value: 'app_opt_2',
-            selected: true,
+            selected: false,
             disabled: false,
         },
         {
@@ -806,4 +807,4 @@ function appendNewOpts() {
     sel2.appendOptions(options2)
 }
 
-setTimeout(appendNewOpts, 1000)
+setTimeout(appendNewOpts, 3000)
