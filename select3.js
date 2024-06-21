@@ -756,11 +756,6 @@ sel2.addEventListener('select3:clear', () => {
     console.log('CLEARING ' + sel2.id)
 })
 
-// setTimeout(() => {
-//     sel.clear()
-//     sel2.clear()
-// }, 2000)
-
 function appendNewOpts() {
     const options1 = [
         {

@@ -47,6 +47,7 @@
     max-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
+    scroll-behavior: smooth;
 }
 
 .select3.opened .inner {
