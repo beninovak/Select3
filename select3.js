@@ -76,10 +76,13 @@ Element.prototype.Select3 = function(config = {}) {
         let previousSearchLength = 0
 
         searchInput.addEventListener('keyup', (e) => {
+            select.dispatchEvent(new Event('select3:search'))
             let searchLength = e.target.value.length
             if (searchLength >= config.minimumInputLength || searchLength < previousSearchLength) {
-                let childNodes = e.target.closest('.inner').querySelectorAll('span:not(.title, .no-results)')
-                Select3_filterInput(e.target.value, childNodes, select, inner, config)
+                let childNodes = e.target.closest('.inner')?.querySelectorAll('span:not(.title, .no-results)')
+                if (childNodes.length) {
+                    Select3_filterInput(e.target.value, childNodes, select, inner, config)
+                }
             }
             previousSearchLength = searchLength
         })
@@ -756,6 +759,10 @@ sel2.addEventListener('select3:clear', () => {
     console.log('CLEARING ' + sel2.id)
 })
 
+sel2.addEventListener('select3:search', () => {
+    console.log('CUSTOM LOGIC')
+})
+
 function appendNewOpts() {
     const options1 = [
         {
@@ -802,4 +809,4 @@ function appendNewOpts() {
     sel2.appendOptions(options2)
 }
 
-setTimeout(appendNewOpts, 3000)
+// setTimeout(appendNewOpts, 3000)
