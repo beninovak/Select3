@@ -214,7 +214,7 @@ Element.prototype.Select3 = function(config = {}) {
                         }
                     }
 
-                    if ((select.multiple && select3.selectedOptionsCount >= config.maximumSelectedOptions) || (!select.multiple && select.val() !== '')) { // Deselect option if too max options are already selected
+                    if ((select.multiple && select3.selectedOptionsCount >= config.maximumSelectedOptions) || (!select.multiple && select.val() !== '')) { // Deselect option if max options are already selected
                         newOption.selected = false
                     }
                     newOptGroup.append(newOption)
@@ -225,20 +225,25 @@ Element.prototype.Select3 = function(config = {}) {
             }
         }
 
+        select3.querySelector(':scope > .placeholder')?.remove()
+        Select3_showPlaceholderIfAppropriate(select, select3, config)
         Select3_initKeyboard(select, select3, config)
     }
 
     select.clear = function() {
+        select.dispatchEvent(new Event('select3:clearing'))
         select.innerHTML = ''
         select.value = ''
-        inner.innerHTML = ''
+        inner.querySelectorAll(':scope > :not(.placeholder, .search-wrapper)').forEach(el => {
+            el.remove()
+        })
         select3.selectedOptionsCount = 0
-        select3.querySelectorAll('.selected-top')?.forEach((el) => {
+        select3.querySelectorAll('.selected-top, .placeholder')?.forEach((el) => {
             el.remove()
         })
         Select3_showPlaceholderIfAppropriate(select, select3, config)
-        select.close()
         select.dispatchEvent(new Event('select3:clear'))
+        //select.close() // TODO -> decide if this should always happen or if it should be a function parameter...IT SHOULDN'T BE BECAUSE IT CAN LEAD TO RECURSION WHEN USED INSIDE 'closing' EVENT
     }
 
     select.destroy = function() {
@@ -287,6 +292,8 @@ Element.prototype.Select3 = function(config = {}) {
 }
 
 function Select3_openSelect3(select, select3, configDropdownMaxHeight) {
+    select.dispatchEvent(new Event('select3:opening'))
+    select3.classList.add('opened')
     // select3.focus()
     select3.classList.add('opened')
     select3.setAttribute('data-opened', '1')
@@ -305,11 +312,12 @@ function Select3_openSelect3(select, select3, configDropdownMaxHeight) {
 }
 
 function Select3_closeSelect3(select, select3) {
-
+    select.dispatchEvent(new Event('select3:closing'))
+    select3.classList.remove('opened')
     let inner = select3.querySelector('.inner')
     select3.classList.remove('opened')
     select3.setAttribute('data-opened', '0')
-    inner.style.maxHeight =  '0px'
+    inner.style.maxHeight = '0px'
 
     if (select3.querySelector('input.search') !== null) {
         select3.querySelector('input.search').value = ''
@@ -324,12 +332,10 @@ function Select3_closeSelect3(select, select3) {
 }
 
 function Select3_openCloseSelect3(select, select3, config = {}) {
-    select3.classList.toggle('opened')
-
     if (select3.classList.contains('opened')) {
-        Select3_openSelect3(select, select3, config.dropdownMaxHeight)
-    } else {
         Select3_closeSelect3(select, select3)
+    } else {
+        Select3_openSelect3(select, select3, config.dropdownMaxHeight)
     }
 }
 
@@ -379,18 +385,6 @@ function Select3_initKeyboard(select, select3, config) {
                 }
                 break
         }
-    }
-}
-
-function Select3_removeOptions(select, select3, hasSearch) {
-    // TODO - remove options from <select> element as well
-    select.value = ''
-    if (hasSearch) {
-        for (let element of select3.querySelector('.inner')?.querySelectorAll(':scope > :not(.search-wrapper)')) {
-            element.remove()
-        }
-    } else {
-        select3.querySelector('.inner')?.children.remove()
     }
 }
 
@@ -467,9 +461,10 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
             isOptionAlreadySelected = true
         }
 
+        // TODO - CONTINUE HERE PROBABLY?? Appended options on multiple select don't work ( they don't count towards the selected options count and can each be selected multiple times )
         // Handle selecting/deselecting
         if (!select.multiple && !isOptionAlreadySelected) {
-
+            select.dispatchEvent(new Event('select3:selecting'))
             let children = select.querySelectorAll('option')
             for (let child of children) {
                 child.removeAttribute('selected')
@@ -486,17 +481,19 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
             select3.querySelector('.selected-top, .placeholder')?.replaceWith(cloneEl)
             optEl.classList.add('selected')
             optEl.setAttribute('data-selected', '1')
-
+            select.dispatchEvent(new Event('select3:selected'))
         } else if (select.multiple) {
 
             if (isOptionAlreadySelected) {
+                select.dispatchEvent(new Event('select3:unselecting'))
                 select3.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]')?.remove()
                 opt.removeAttribute('selected')
                 optEl.classList.remove('selected')
                 optEl.setAttribute('data-selected', '0')
-
                 Select3_showPlaceholderIfAppropriate(select, select3, config)
+                select.dispatchEvent(new Event('select3:unselected'))
             } else {
+                select.dispatchEvent(new Event('select3:selecting'))
                 select3.insertBefore(cloneEl, select3.querySelector('.inner'))
                 opt.setAttribute('selected', 'selected')
 
@@ -505,6 +502,7 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
 
                 // Only happens if the option that was just clicked was the first selected option.
                 select3.querySelector(':scope > span.placeholder')?.remove()
+                select.dispatchEvent(new Event('select3:selected'))
             }
 
             // When the maximum allowed amount of options has been selected, add class to select3 to indicate this.
@@ -683,11 +681,8 @@ Select3_initDocumentListener() // TODO Should be last line in file --> maybe jus
 
 // TODO - comment / remove
 const sel = d.querySelector('#select3')
-sel.addEventListener('select3:init', () => {
-    console.log('INITING ' + sel.id)
-})
 sel.Select3({
-    search: false,
+    search: true,
     searchNoResults: 'Found no matching options',
     closeOnSelect: true,
     placeholder: 'Please select an option placeholder',
@@ -708,60 +703,41 @@ sel.Select3({
 
 
 const sel2 = d.querySelector('#select3-2')
-sel2.addEventListener('select3:init', () => {
-    console.log('INITING ' + sel2.id)
-})
 sel2.Select3({
     search: true,
     searchNoResults: 'Found no matching options',
     closeOnSelect: false,
     placeholder: 'Please select an option placeholder',
     maximumSelectedOptions: 3,
-    // formatOptionsFunction: function(option) {
-    //     if (option.dataset.img) {
-    //         let span = d.createElement('span')
-    //         let image = d.createElement('img')
-    //         image.src = option.dataset.img
-    //         span.append(image)
-    //         span.append(option.textContent)
-    //         return span
-    //     } else {
-    //         return option.textContent
+})
+
+// sel.addEventListener('select3:opening', () => {
+    // console.log('OPENING ' + sel.id)
+    // if (sel.getAttribute('data-added-opts') !== '1') {
+    //     sel.clear()
+    //     // https://opentdb.com/api.php?amount=4&category=22&difficulty=hard
+    //     const xhttp = new XMLHttpRequest();
+    //
+    //     xhttp.onload = function() {
+    //         // Here you can use the Data
+    //         const results = JSON.parse(this.responseText).results
+    //
+    //         let options = [];
+    //         results.forEach(el => {
+    //             options.push({
+    //                 'textContent': el.question,
+    //                 'value': el.correct_answer,
+    //             })
+    //         })
+    //         sel.appendOptions(options)
+    //         sel.open()
     //     }
+    //
+    //     xhttp.open('GET', 'https://opentdb.com/api.php?amount=4&category=22&difficulty=hard')
+    //     xhttp.send()
+    //     sel.setAttribute('data-added-opts', '1')
     // }
-})
-
-sel.addEventListener('change', () => {
-    console.log('CHANGING')
-})
-
-sel2.addEventListener('change', () => {
-    console.log('CHANGING')
-})
-
-sel2.addEventListener('select3:open', () => {
-    console.log('OPENING')
-})
-
-sel2.addEventListener('select3:close', () => {
-    console.log('CLOSING')
-})
-
-sel2.addEventListener('select3:maxed', () => {
-    console.log('MAXED')
-})
-
-sel2.addEventListener('select3:destroy', () => {
-    console.log('DESTROYING ' + sel2.id)
-})
-
-sel2.addEventListener('select3:clear', () => {
-    console.log('CLEARING ' + sel2.id)
-})
-
-sel2.addEventListener('select3:search', () => {
-    console.log('CUSTOM LOGIC')
-})
+// })
 
 function appendNewOpts() {
     const options1 = [
@@ -786,27 +762,27 @@ function appendNewOpts() {
     ]
     sel.appendOptions(options1)
 
-    const options2 = [
-        {
-            textContent: 'Appended option 1',
-            value: 'app_opt_1',
-            selected: false,
-            disabled: false,
-        },
-        {
-            textContent: 'Appended option 2',
-            value: 'app_opt_2',
-            selected: false,
-            disabled: false,
-        },
-        {
-            textContent: 'Appended option 3',
-            value: 'app_opt_3',
-            selected: true,
-            disabled: false,
-        }
-    ]
-    sel2.appendOptions(options2)
+    // const options2 = [
+    //     {
+    //         textContent: 'Appended option 1',
+    //         value: 'app_opt_1',
+    //         selected: false,
+    //         disabled: false,
+    //     },
+    //     {
+    //         textContent: 'Appended option 2',
+    //         value: 'app_opt_2',
+    //         selected: false,
+    //         disabled: false,
+    //     },
+    //     {
+    //         textContent: 'Appended option 3',
+    //         value: 'app_opt_3',
+    //         selected: true,
+    //         disabled: false,
+    //     }
+    // ]
+    // sel2.appendOptions(options2)
 }
 
 // setTimeout(appendNewOpts, 3000)
