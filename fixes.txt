@@ -2,3 +2,4 @@
 2. ---Removing option with x button in tag closes select even with closeOnSelect: false---
 3. Arrows don't scroll dropdown on Chrome
 4. ---Single select selected option isn't highlighted---
+5. Copy entire HTML structure of option to .selected-top when option is selected

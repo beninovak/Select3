@@ -5,6 +5,5 @@
 // 5. Check if you could append array of options to an empty select with no options
 // 6. Dynamic option creation
 // 7. Clear all options method
-
-8. Maybe add 'destroying' and 'initing' events?...Why tho
-9. Add a way to disabled a certain option...would potentially need to do more than just adding "disabled" attribute to <option> and data-disabled to select3 option???
+// 8. Maybe add 'destroying' and 'initing' events?...Why tho
+9. Add a way for user to disable a certain option...would potentially need to do more than just adding "disabled" attribute to <option> and data-disabled to select3 option???
