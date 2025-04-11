@@ -71,6 +71,7 @@ Element.prototype.Select3 = function(config = {}) {
         let searchInput = d.createElement('input')
         searchInput.classList.add('search')
         searchInput.setAttribute('type', 'search')
+        searchInput.placeholder = config.searchPlaceholder
 
         let previousSearchLength = 0
 
@@ -626,6 +627,7 @@ function Select3_applyConfig(config) {
     /* All possible options and their default values */
     const defaultConfig = {
         search: false,
+        searchPlaceholder: '',
         closeOnSelect: true,
         minimumInputLength: 3,
         dropdownMaxHeight: 280,
@@ -666,6 +668,7 @@ function Select3_isOptionValid(key, value) {
         case 'textContent': // for options object
         case 'placeholder':
         case 'searchNoResults':
+        case 'searchPlaceholder':
             return typeof value === 'string' && value.length > 0 && value.length < 1000
 
         case 'dataset':  // for options object
