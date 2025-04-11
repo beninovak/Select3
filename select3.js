@@ -428,7 +428,13 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
         opt.selected = true // In case this option was added with 'appendOptions' function
         let cloneEl = optEl.cloneNode() // Copy selected node for use at the top of select3
         cloneEl.classList.add('selected-top')
-        cloneEl.textContent = (opt.label.length ? opt.label : opt.textContent)
+        
+        if (opt.value === '' && opt.textContent === '') { // For placeholder element
+            cloneEl.textContent = config.placeholder;
+        } else {
+            cloneEl.textContent = (opt.label.length ? opt.label : opt.textContent)
+        }
+
 
         if (!select.multiple) {
             select.value = opt.value
