@@ -248,6 +248,7 @@ Element.prototype.Select3 = function(config = {}) {
         })
         Select3_showPlaceholderIfAppropriate(select, select3, config)
         select.dispatchEvent(new Event('select3:clear'))
+        select.dispatchEvent(new Event('change'))
         //select.close() // TODO -> decide if this should always happen or if it should be a function parameter...IT SHOULDN'T BE BECAUSE IT CAN LEAD TO RECURSION WHEN USED INSIDE 'closing' EVENT
     }
 
