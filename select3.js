@@ -440,7 +440,12 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
 
         if (!select.multiple) {
             select.value = opt.value
-            select3.querySelector('.selected-top, .placeholder')?.replaceWith(cloneEl)
+            if (select3.querySelector('.selected-top, .placeholder')?.length) {
+                select3.querySelector('.selected-top, .placeholder').replaceWith(cloneEl)
+            } else {
+                select3.querySelector('.selected-top, .placeholder')?.remove()
+                select3.prepend(cloneEl)
+            }
         } else if (select.multiple && select3.selectedOptionsCount < config.maximumSelectedOptions) {
             select3.selectedOptionsCount++
             cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
