@@ -305,7 +305,6 @@ Element.prototype.Select3 = function(config = {}) {
 
 function Select3_openSelect3(select, select3, configDropdownMaxHeight) {
     select.dispatchEvent(new Event('select3:opening'))
-    console.log('select3:opening')
     select3.classList.add('opened')
     // select3.focus()
     select3.classList.add('opened')
@@ -322,12 +321,10 @@ function Select3_openSelect3(select, select3, configDropdownMaxHeight) {
         inner.classList.add('drop-up')
     }
     select.dispatchEvent(new Event('select3:open'))
-    console.log('select3:open')
 }
 
 function Select3_closeSelect3(select, select3) {
     select.dispatchEvent(new Event('select3:closing'))
-    console.log('select3:closing')
 
     select3.classList.remove('opened')
     let inner = select3.querySelector('.inner')
@@ -345,7 +342,6 @@ function Select3_closeSelect3(select, select3) {
         opt.classList.remove('option-hidden')
     }
     select.dispatchEvent(new Event('select3:close'))
-    console.log('select3:close')
 }
 
 function Select3_openCloseSelect3(select, select3, config = {}) {
@@ -701,9 +697,6 @@ function Select3_initDocumentListener() {
     /* Handle closing of select when clicking outside it */
     d.addEventListener('click', (e) => {
         e.stopPropagation()
-        console.log('CLICKING')
-        console.log(e.target)
-        console.log(e.target.closest('div.select3'))
         if (e.target.closest('div.select3') === null) {
             for (let select3 of d.querySelectorAll('div.select3.opened')) {
                 Select3_closeSelect3(select3.previousSibling, select3)
