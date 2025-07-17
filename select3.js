@@ -86,6 +86,12 @@ Element.prototype.Select3 = function(config = {}) {
             }
             previousSearchLength = searchLength
         })
+
+        searchInput.addEventListener('click', (e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            searchInput.focus()
+        })
         searchWrapper.append(searchInput)
         inner.prepend(searchWrapper)
     }
@@ -299,6 +305,7 @@ Element.prototype.Select3 = function(config = {}) {
 
 function Select3_openSelect3(select, select3, configDropdownMaxHeight) {
     select.dispatchEvent(new Event('select3:opening'))
+    console.log('select3:opening')
     select3.classList.add('opened')
     // select3.focus()
     select3.classList.add('opened')
@@ -315,10 +322,13 @@ function Select3_openSelect3(select, select3, configDropdownMaxHeight) {
         inner.classList.add('drop-up')
     }
     select.dispatchEvent(new Event('select3:open'))
+    console.log('select3:open')
 }
 
 function Select3_closeSelect3(select, select3) {
     select.dispatchEvent(new Event('select3:closing'))
+    console.log('select3:closing')
+
     select3.classList.remove('opened')
     let inner = select3.querySelector('.inner')
     select3.classList.remove('opened')
@@ -335,6 +345,7 @@ function Select3_closeSelect3(select, select3) {
         opt.classList.remove('option-hidden')
     }
     select.dispatchEvent(new Event('select3:close'))
+    console.log('select3:close')
 }
 
 function Select3_openCloseSelect3(select, select3, config = {}) {
@@ -430,7 +441,7 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
         opt.selected = true // In case this option was added with 'appendOptions' function
         let cloneEl = optEl.cloneNode() // Copy selected node for use at the top of select3
         cloneEl.classList.add('selected-top')
-        
+
         if (opt.value === '' && opt.textContent === '') { // For placeholder element
             cloneEl.textContent = config.placeholder;
         } else {
@@ -690,6 +701,9 @@ function Select3_initDocumentListener() {
     /* Handle closing of select when clicking outside it */
     d.addEventListener('click', (e) => {
         e.stopPropagation()
+        console.log('CLICKING')
+        console.log(e.target)
+        console.log(e.target.closest('div.select3'))
         if (e.target.closest('div.select3') === null) {
             for (let select3 of d.querySelectorAll('div.select3.opened')) {
                 Select3_closeSelect3(select3.previousSibling, select3)
@@ -699,111 +713,3 @@ function Select3_initDocumentListener() {
 }
 
 Select3_initDocumentListener() // TODO Should be last line in file --> maybe just unwrap this function??
-
-// TODO - comment / remove
-const sel = d.querySelector('#select3')
-sel.Select3({
-    search: true,
-    searchNoResults: 'Found no matching options',
-    closeOnSelect: false,
-    placeholder: 'Please select an option placeholder',
-    maximumSelectedOptions: 3,
-    formatOptionsFunction: function(option) {
-        if (option.dataset.img) {
-            let span = d.createElement('span')
-            let image = d.createElement('img')
-            image.src = option.dataset.img
-            span.append(image)
-            span.append(option.textContent)
-            return span
-        } else {
-            return option.textContent
-        }
-    }
-})
-
-
-const sel2 = d.querySelector('#select3-2')
-sel2.Select3({
-    search: true,
-    searchNoResults: 'Found no matching options',
-    closeOnSelect: false,
-    placeholder: 'Please select an option placeholder',
-    maximumSelectedOptions: 3,
-})
-
-// sel.addEventListener('select3:opening', () => {
-    // console.log('OPENING ' + sel.id)
-    // if (sel.getAttribute('data-added-opts') !== '1') {
-    //     sel.clear()
-    //     // https://opentdb.com/api.php?amount=4&category=22&difficulty=hard
-    //     const xhttp = new XMLHttpRequest();
-    //
-    //     xhttp.onload = function() {
-    //         // Here you can use the Data
-    //         const results = JSON.parse(this.responseText).results
-    //
-    //         let options = [];
-    //         results.forEach(el => {
-    //             options.push({
-    //                 'textContent': el.question,
-    //                 'value': el.correct_answer,
-    //             })
-    //         })
-    //         sel.appendOptions(options)
-    //         sel.open()
-    //     }
-    //
-    //     xhttp.open('GET', 'https://opentdb.com/api.php?amount=4&category=22&difficulty=hard')
-    //     xhttp.send()
-    //     sel.setAttribute('data-added-opts', '1')
-    // }
-// })
-
-function appendNewOpts() {
-    // const options1 = [
-    //     {
-    //         label: 'Optgroup title 1',
-    //         children: [
-    //             {
-    //                 textContent: 'Child option 1',
-    //                 value: 'some_value_1',
-    //             },
-    //             {
-    //                 textContent: 'Child option 2',
-    //                 value: 'some_value_2',
-    //                 selected: true,
-    //             },
-    //             {
-    //                 textContent: 'Child option 3',
-    //                 value: 'some_value_3',
-    //             },
-    //         ],
-    //     },
-    // ]
-    // sel.appendOptions(options1)
-
-    const options2 = [
-        {
-            textContent: 'Appended option 1',
-            value: 'app_opt_1',
-            selected: true,
-            disabled: false,
-        },
-        {
-            textContent: 'Appended option 2',
-            value: 'app_opt_2',
-            selected: true,
-            disabled: false,
-        },
-        {
-            textContent: 'Appended option 3',
-            value: 'app_opt_3',
-            selected: true,
-            disabled: false,
-        }
-    ]
-    sel2.appendOptions(options2)
-}
-
-setTimeout(appendNewOpts, 1000)
