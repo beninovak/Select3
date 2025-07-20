@@ -1,3 +1,0 @@
-TODO --> Consider wrapping matching search results in <span> to
-            enable highlighting the part of options that match the search string
-TODO --> Accessibility ( role 'listbox' for inner, role 'option' for options )...just use <menu> and <li> instead???
