@@ -376,8 +376,10 @@ function Select3_initKeyboard(select, select3, config) {
     select3.onkeydown = function(e) {
         switch(e.keyCode) {
             case SPACEBAR_KEY_CODE:
-                e.preventDefault() // Prevents scrolling down of list
-                Select3_openSelect3(select, select3, config.dropdownMaxHeight)
+                if (!e.target.classList.contains("search")) {
+                    e.preventDefault() // Prevents scrolling down of list
+                    Select3_openSelect3(select, select3, config.dropdownMaxHeight)
+                }
                 break
 
             case ESCAPE_KEY_CODE:
