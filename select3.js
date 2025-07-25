@@ -75,16 +75,24 @@ Element.prototype.Select3 = function(config = {}) {
 
         let previousSearchLength = 0
 
+        let searchTimeout = null;
         searchInput.addEventListener('keyup', (e) => {
             select.dispatchEvent(new Event('select3:search'))
-            let searchLength = e.target.value.length
-            if (searchLength >= config.minimumInputLength || searchLength < previousSearchLength) {
-                let childNodes = e.target.closest('.inner')?.querySelectorAll('span:not(.title, .no-results)')
-                if (childNodes.length) {
-                    Select3_filterInput(e.target.value, childNodes, select, inner, config)
-                }
+
+            if(searchTimeout) {
+                clearTimeout(searchTimeout)
             }
-            previousSearchLength = searchLength
+
+            searchTimeout = setTimeout(() => {
+                let searchLength = e.target.value.length
+                if (searchLength >= config.minimumInputLength || searchLength < previousSearchLength) {
+                    let childNodes = e.target.closest('.inner')?.querySelectorAll('span:not(.title, .no-results)')
+                    if (childNodes.length) {
+                        Select3_filterInput(e.target.value, childNodes, select, inner, config)
+                    }
+                }
+                previousSearchLength = searchLength
+            }, 500)
         })
 
         searchInput.addEventListener('click', (e) => {
