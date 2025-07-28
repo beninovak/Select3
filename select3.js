@@ -18,8 +18,6 @@ Element.prototype.Select3 = function(config = {}) {
         config.maximumSelectedOptions = select.selectedOptions.length
     }
 
-    // TODO --> Rename
-    // TODO --> minify function names to save chars
     // TODO --> Check all other TODOs
 
     let select3 = d.createElement('div')
@@ -73,11 +71,8 @@ Element.prototype.Select3 = function(config = {}) {
         searchInput.setAttribute('type', 'search')
         searchInput.placeholder = config.searchPlaceholder
 
-        let previousSearchLength = 0
-
-        let searchTimeout = null;
+        let searchTimeout = null
         searchInput.addEventListener('keyup', (e) => {
-            select.dispatchEvent(new Event('select3:search'))
 
             if(searchTimeout) {
                 clearTimeout(searchTimeout)
@@ -85,13 +80,13 @@ Element.prototype.Select3 = function(config = {}) {
 
             searchTimeout = setTimeout(() => {
                 let searchLength = e.target.value.length
-                if (searchLength >= config.minimumInputLength || searchLength < previousSearchLength) {
+                if (searchLength >= config.minimumInputLength) {
+                    select.dispatchEvent(new Event('select3:search'))
                     let childNodes = e.target.closest('.inner')?.querySelectorAll('span:not(.title, .no-results)')
                     if (childNodes.length) {
                         Select3_filterInput(e.target.value, childNodes, select, inner, config)
                     }
                 }
-                previousSearchLength = searchLength
             }, 500)
         })
 
@@ -125,10 +120,9 @@ Element.prototype.Select3 = function(config = {}) {
         select.open(e)
     })
 
-
-    // ---------------------------------------------------------------
-    // ------------------ Attached helper functions ------------------
-    // ---------------------------------------------------------------
+    // --------------------------------------------------------------- //
+    // ------------------ Attached helper functions ------------------ //
+    // --------------------------------------------------------------- //
     select.val = function() {
         let value = []
         for (let selOpt of select.selectedOptions) {
@@ -137,12 +131,12 @@ Element.prototype.Select3 = function(config = {}) {
         if (value.length > 0) {
             return select.multiple ? value : value[0]
         }
-        return '';
+        return ''
     }
 
     select.open = function(e = null) {
         e?.stopPropagation()
-        Select3_openSelect3(select, select3, config.dropdownMaxHeight)
+        Select3_openSelect3(select, select3, config)
     }
 
     select.close = function(e = null) {
@@ -160,7 +154,7 @@ Element.prototype.Select3 = function(config = {}) {
 
     select.appendOptions = function(options, parent = null, e = null) { // TODO - asses the 'e' argument...is it necessary? Also 'parent'...
         if (!Array.isArray(options)) {
-            throw new TypeError('Incorrect argument passed to function appendOptions! The "options" argument must be of type array.');
+            throw new TypeError('Incorrect argument passed to function appendOptions! The "options" argument must be of type array.')
         }
 
         // let parentToAppendTo = (parent === null ? select : parent)
@@ -175,14 +169,14 @@ Element.prototype.Select3 = function(config = {}) {
             children: [],
         }
 
-        // TODO - 'options' should be array with
-        //      - 'label' or 'textContent' ( regular option or optgroup ) - required
-        //      - 'value' - required ( only for regular option )
-        //      - 'selected' ( regular option )
-        //      - 'disabled' ( regular option )
-        //      - 'dataset' => JSON ( regular option )
-        //      - 'children' => should contain array of options ( optgroup )
-        //      - 'optgroup' option to specify which optgroup the option should be appended to...maybe?...use index or label of optgroup???
+        // - 'options' should be array with
+        // - 'label' or 'textContent' ( regular option or optgroup ) - required
+        // - 'value' - required ( only for regular option )
+        // - 'selected' ( regular option )
+        // - 'disabled' ( regular option )
+        // - 'dataset' => JSON ( regular option )
+        // - 'children' => should contain array of options ( optgroup )
+        // - 'optgroup' option to specify which optgroup the option should be appended to...maybe?...use index or label of optgroup???
 
         for (const option of options) {
             if (option.children?.length === 0 && (!option.hasOwnProperty('value') || !Select3_isOptionValid('value', option.value))) { // Only do the value check on regular options and not optgroups
@@ -200,7 +194,6 @@ Element.prototype.Select3 = function(config = {}) {
                 }
             }
 
-            console.table(optionConfig)
             if (optionConfig.children.length === 0) { // Is regular option
                 let newOption = d.createElement('option')
                 for (const property in optionConfig) {
@@ -249,11 +242,19 @@ Element.prototype.Select3 = function(config = {}) {
         Select3_initKeyboard(select, select3, config)
     }
 
-    select.clear = function() {
+    select.clear = function(removeNoResults = true) {
         select.dispatchEvent(new Event('select3:clearing'))
         select.innerHTML = ''
         select.value = ''
-        inner.querySelectorAll(':scope > :not(.placeholder, .search-wrapper)').forEach(el => {
+
+        let selector
+        if (removeNoResults) {
+            selector = ':scope > :not(.placeholder, .search-wrapper)'
+        } else {
+            selector = ':scope > :not(.placeholder, .search-wrapper, .no-results)'
+        }
+
+        inner.querySelectorAll(selector).forEach(el => {
             el.remove()
         })
         select3.selectedOptionsCount = 0
@@ -263,7 +264,6 @@ Element.prototype.Select3 = function(config = {}) {
         Select3_showPlaceholderIfAppropriate(select, select3, config)
         select.dispatchEvent(new Event('select3:clear'))
         select.dispatchEvent(new Event('change'))
-        //select.close() // TODO -> decide if this should always happen or if it should be a function parameter...IT SHOULDN'T BE BECAUSE IT CAN LEAD TO RECURSION WHEN USED INSIDE 'closing' EVENT
     }
 
     select.destroy = function() {
@@ -311,7 +311,7 @@ Element.prototype.Select3 = function(config = {}) {
     return select
 }
 
-function Select3_openSelect3(select, select3, configDropdownMaxHeight) {
+function Select3_openSelect3(select, select3, config) {
     select.dispatchEvent(new Event('select3:opening'))
     select3.classList.add('opened')
     // select3.focus()
@@ -319,7 +319,7 @@ function Select3_openSelect3(select, select3, configDropdownMaxHeight) {
     select3.setAttribute('data-opened', '1')
     let inner = select3.querySelector('.inner')
     let dropdownMaxHeight = inner.scrollHeight
-    dropdownMaxHeight = dropdownMaxHeight > configDropdownMaxHeight ? configDropdownMaxHeight : dropdownMaxHeight
+    dropdownMaxHeight = dropdownMaxHeight > config.dropdownMaxHeight ? config.dropdownMaxHeight : dropdownMaxHeight
     inner.style.maxHeight = dropdownMaxHeight + 'px' // Here inner.offsetHeight is just the combined width of the top and bottom border
     inner.classList.remove('drop-up')
 
@@ -328,6 +328,11 @@ function Select3_openSelect3(select, select3, configDropdownMaxHeight) {
     if (inner.offsetHeight >= innerFromBottom) {
         inner.classList.add('drop-up')
     }
+
+    if (config.search) {
+        select3.querySelector('input[type="search"]')?.focus()
+    }
+
     select.dispatchEvent(new Event('select3:open'))
 }
 
@@ -356,7 +361,7 @@ function Select3_openCloseSelect3(select, select3, config = {}) {
     if (select3.classList.contains('opened')) {
         Select3_closeSelect3(select, select3)
     } else {
-        Select3_openSelect3(select, select3, config.dropdownMaxHeight)
+        Select3_openSelect3(select, select3, config)
     }
 }
 
@@ -368,6 +373,7 @@ function Select3_initKeyboard(select, select3, config) {
     const ESCAPE_KEY_CODE = 27
 
     const options = select3.querySelectorAll('.inner span[data-value]:not(.disabled)')
+    if (!options.length) return
 
     let focusedIndex = 0
     options[focusedIndex].classList.add('focused')
@@ -378,7 +384,7 @@ function Select3_initKeyboard(select, select3, config) {
             case SPACEBAR_KEY_CODE:
                 if (!e.target.classList.contains("search")) {
                     e.preventDefault() // Prevents scrolling down of list
-                    Select3_openSelect3(select, select3, config.dropdownMaxHeight)
+                    Select3_openSelect3(select, select3, config)
                 }
                 break
 
@@ -449,20 +455,15 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
         cloneEl.classList.add('selected-top')
 
         if (opt.value === '' && opt.textContent === '') { // For placeholder element
-            cloneEl.textContent = config.placeholder;
+            cloneEl.textContent = config.placeholder
         } else {
             cloneEl.textContent = (opt.label.length ? opt.label : opt.textContent)
         }
 
-
         if (!select.multiple) {
             select.value = opt.value
-            if (select3.querySelector('.selected-top, .placeholder')?.length) {
-                select3.querySelector('.selected-top, .placeholder').replaceWith(cloneEl)
-            } else {
-                select3.querySelector('.selected-top, .placeholder')?.remove()
-                select3.prepend(cloneEl)
-            }
+            select3.querySelector('.selected-top, .placeholder')?.remove()
+            select3.prepend(cloneEl)
         } else if (select.multiple && select3.selectedOptionsCount < config.maximumSelectedOptions) {
             select3.selectedOptionsCount++
             cloneEl.prepend(Select3_getCloseBtn(select, select3, config))
@@ -514,12 +515,13 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
 
             opt.selected = true
             select.value = opt.value // Needed in case custom options were added
-            select3.querySelector('.selected-top, .placeholder')?.replaceWith(cloneEl)
+
+            select3.querySelector('.selected-top, .placeholder')?.remove()
+            select3.prepend(cloneEl)
             optEl.classList.add('selected')
             optEl.setAttribute('data-selected', '1')
             select.dispatchEvent(new Event('select3:selected'))
         } else if (select.multiple) {
-
             if (isOptionAlreadySelected) {
                 // select.dispatchEvent(new Event('select3:unselecting'))
                 select3.querySelector(':scope > span[data-value="' + cloneEl.getAttribute('data-value') + '"]')?.remove()
@@ -559,6 +561,10 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
         }
     })
     parent.append(optEl)
+    let dropdownMaxHeight = parent.scrollHeight
+    dropdownMaxHeight = dropdownMaxHeight > config.dropdownMaxHeight ? config.dropdownMaxHeight : dropdownMaxHeight
+    parent.style.maxHeight = dropdownMaxHeight + 'px' // Here inner.offsetHeight is just the combined width of the top and bottom border
+    parent.classList.remove('drop-up')
 }
 
 function Select3_showPlaceholderIfAppropriate(select, select3, config) {
@@ -581,7 +587,6 @@ function Select3_getCloseBtn(select, select3, config) {
     return closeBtn
 }
 
-// TODO - consider using this in other appropriate places - 'data-selected', '0' - what did I mean by this???
 function Select3_unselectOption(select, select3, option, config) {
 
     let value = option.getAttribute('data-value')
@@ -715,4 +720,4 @@ function Select3_initDocumentListener() {
     })
 }
 
-Select3_initDocumentListener() // TODO Should be last line in file --> maybe just unwrap this function??
+Select3_initDocumentListener() // Should be last line in file...TODO --> maybe just unwrap this function??
