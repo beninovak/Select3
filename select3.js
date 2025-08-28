@@ -320,7 +320,7 @@ function Select3_openSelect3(select, select3, config) {
     let inner = select3.querySelector('.inner')
     let dropdownMaxHeight = inner.scrollHeight
     dropdownMaxHeight = dropdownMaxHeight > config.dropdownMaxHeight ? config.dropdownMaxHeight : dropdownMaxHeight
-    inner.style.maxHeight = dropdownMaxHeight + 'px' // Here inner.offsetHeight is just the combined width of the top and bottom border
+    inner.style.maxHeight = `${dropdownMaxHeight + inner.offsetHeight}px` // Here inner.offsetHeight is just the combined width of the top and bottom border
     inner.classList.remove('drop-up')
 
     // Determine whether the options should drop-down or drop-up
@@ -496,9 +496,6 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
             isOptionAlreadySelected = true
         }
 
-        // TODO - CONTINUE HERE PROBABLY?? Appended options on multiple select don't work ( they don't count towards the selected options count and can each be selected multiple times )
-        // ^^ This should be fixed now I think
-
         // Handle selecting/deselecting
         if (!select.multiple && !isOptionAlreadySelected) {
             // select.dispatchEvent(new Event('select3:selecting'))
@@ -563,7 +560,7 @@ function Select3_appendOptions(select, select3, parent, opt, config) {
     parent.append(optEl)
     let dropdownMaxHeight = parent.scrollHeight
     dropdownMaxHeight = dropdownMaxHeight > config.dropdownMaxHeight ? config.dropdownMaxHeight : dropdownMaxHeight
-    parent.style.maxHeight = dropdownMaxHeight + 'px' // Here inner.offsetHeight is just the combined width of the top and bottom border
+    parent.style.maxHeight = `${dropdownMaxHeight + parent.offsetHeight}px` // Here parent.offsetHeight is just the combined width of the top and bottom border
     parent.classList.remove('drop-up')
 }
 
